@@ -1,0 +1,1 @@
+Bool g_Gaming = TRUE;
