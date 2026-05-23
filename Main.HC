@@ -1,14 +1,19 @@
 Cd(__DIR__);
 #include "Globals.HC";
+#include "Update.HC";
+#include "Draw.HC";
 
 U0 CleanUp()
 {
-  // Free all the queues and stuff
+  // Free all the queues and stuff
+  QueDel(&collider_que);
 }
 
 U0 DrawIt(CTask *task, CDC *dc)
 {
   GrPrint(dc, 0,0, "Hello World!");  
+  UpdatePlrMove;
+  DrawColliders(dc);
 }
 
 U0 Main()
@@ -23,6 +28,7 @@ U0 Main()
 
   while(g_Gaming)
   {
+      
       switch(GetMsg(&input1, &input2, 1<<MSG_KEY_DOWN+1<<MSG_KEY_UP))
       {
 	case MSG_KEY_UP:
@@ -33,9 +39,13 @@ U0 Main()
 
 	      switch(input2.u8[0])$IV,0$
 	      {
-		 case '\n':
-		   // do nothing
-                 break;
+		case '\n':
+		  // do nothing
+                break;
+		case SC_CURSOR_UP: keys.up = FALSE; break;
+		case SC_CURSOR_DOWN: keys.down = FALSE; break;
+		case SC_CURSOR_LEFT: keys.left = FALSE; break;
+		case SC_CURSOR_RIGHT: keys.right = FALSE; break;
 	      }
 
 	    break;
@@ -49,10 +59,13 @@ U0 Main()
 
 	      switch(input2.u8[0])
 	      {
-		 case '\n':
-		   // do nothing
-                 break;
-
+		case '\n':
+		  // do nothing
+                break;
+		case SC_CURSOR_UP: keys.up = TRUE; break;
+		case SC_CURSOR_DOWN: keys.down = TRUE; break;
+		case SC_CURSOR_LEFT: keys.left = TRUE; break;
+		case SC_CURSOR_RIGHT: keys.right = TRUE; break;
 	      }
 
 	    break;
@@ -61,7 +74,7 @@ U0 Main()
 
       }
   }
-
+  CleanUp;
   SettingsPop;
 }
 
