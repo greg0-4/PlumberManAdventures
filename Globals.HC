@@ -59,12 +59,14 @@ Bool AABBCollision(Collider *a, Collider *b)
   return TRUE;
 }
 
-I64 gameMap[4][5] = {
+I64 gameMap[4][5] = {
   {1,1,1,1,1},
   {1,0,0,0,1},
   {1,0,0,0,1},
   {1,0,0,1,1}
 };
+
+Vector2 camOffset;
 
 U0 InitMapColliders()
 {
@@ -85,15 +87,18 @@ U0 InitMapColliders()
 U0 Init()
 {
   QueInit(&collider_que);
-  plr.myCollider = NewCollider(0, 0, 12, 12, 1);
+  plr.myCollider = NewCollider(320, 0, 12, 12, 1);
   plr.vel.x = 0;
   plr.vel.y = 0;
 
   keys.up = FALSE;
   keys.down = FALSE;
   keys.left = FALSE;
-  keys.right = FALSE;
+  keys.right = FALSE;
   InitMapColliders;
 }
 
 Init;
+
+
+

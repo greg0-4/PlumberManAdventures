@@ -6,7 +6,7 @@ U0 DrawColliders(CDC *dc)
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
-    GrRect(dc, temp->pos.x, temp->pos.y, temp->size.x, temp->size.y);
-    temp = next; 
+    GrRect(dc, temp->pos.x - camOffset.x, temp->pos.y - camOffset.y, temp->size.x, temp->size.y);
+    temp = next; 
   }
 }

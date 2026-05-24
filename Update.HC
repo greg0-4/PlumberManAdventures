@@ -1,4 +1,10 @@
 
+U0 UpdateCam()
+{
+  camOffset.x = plr.myCollider->pos.x - 320;
+  camOffset.y = plr.myCollider->pos.y - 240;
+}
+
 U0 UpdatePlrMove()
 {
   plr.vel.y = 0;
@@ -33,7 +39,7 @@ U0 UpdatePlrMove()
     {
       if(plr.vel.x > 0)
       {
-        plr.myCollider->pos.x = temp->pos.x - 0.1 - plr.myCollider->size.x;
+        plr.myCollider->pos.x = temp->pos.x - 0.1 - plr.myCollider->size.x;
       }
       else
       {
