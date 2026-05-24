@@ -1,22 +1,66 @@
 
 U0 UpdatePlrMove()
 {
-  I8 direction = 0;
+  plr.vel.y = 0;
+  plr.vel.x = 0;
   if(keys.up)
   {
-    plr.myCollider->pos.y--;
+    plr.vel.y = -5;
   }
   if(keys.down)
   {
-    plr.myCollider->pos.y++;
+    plr.vel.y = 5;
   }
+
+    
+
   if(keys.left)
   {
-    plr.myCollider->pos.x--;
+    plr.vel.x = -5;
   }
   if(keys.right)
   {
-    plr.myCollider->pos.x++;
+    plr.vel.x = 5;
+  }
+
+  plr.myCollider->pos.x += plr.vel.x;
+  // X Axis collision
+  Collider *temp = collider_que.next;
+  while(temp != &collider_que)
+  {
+    Collider *next = temp->next;
+    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp))
+    {
+      if(plr.vel.x > 0)
+      {
+        plr.myCollider->pos.x = temp->pos.x - 0.1 - plr.myCollider->size.x;
+      }
+      else
+      {
+	plr.myCollider->pos.x = temp->pos.x + 0.1 + temp->size.x;
+      }
+    }
+    temp = next;
+  }
+
+  plr.myCollider->pos.y += plr.vel.y;
+  // Y Axis collision
+  temp = collider_que.next;
+  while(temp != &collider_que)
+  {
+    next = temp->next;
+    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp))
+    {
+      if(plr.vel.y > 0)
+      {
+        plr.myCollider->pos.y = temp->pos.y - 0.1 - plr.myCollider->size.y;
+      }
+      else
+      {
+   	plr.myCollider->pos.y = temp->pos.y + 0.1 + temp->size.y;
+      }
+    }
+    temp = next;
   }
 
 }

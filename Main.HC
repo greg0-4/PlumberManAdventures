@@ -12,7 +12,7 @@ U0 CleanUp()
 U0 DrawIt(CTask *task, CDC *dc)
 {
   GrPrint(dc, 0,0, "Hello World!");  
-  UpdatePlrMove;
+  UpdatePlrMove;
   DrawColliders(dc);
 }
 
@@ -32,7 +32,7 @@ U0 Main()
       switch(GetMsg(&input1, &input2, 1<<MSG_KEY_DOWN+1<<MSG_KEY_UP))
       {
 	case MSG_KEY_UP:
-	  switch(input1)
+	  switch(input1)
           {
 	    case CH_SHIFT_ESC: g_Gaming = FALSE; break;
 	    case 0:
