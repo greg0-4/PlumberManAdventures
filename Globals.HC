@@ -20,11 +20,17 @@ class Player
 
 class Keys
 {
-  Bool up,down,left,right;
+  Bool up,down,left,right,space;
 } keys;
 
+class Bullet : CQue
+{
+  Vector2 vel;
+  Collider *myCollider;
+} bullet_que;
 
-Collider *NewCollider(I64 x1, I64 y1, I64 x2, I64 y2, I64 type)
+
+Collider *NewCollider(F64 x1, F64 y1, F64 x2, F64 y2, F64 type)
 {
   Collider *new = CAlloc(sizeof(Collider));
   new->pos.x = x1;
@@ -42,6 +48,26 @@ U0 DelCollider(Collider *a)
   Free(a);
 }
 
+
+Bullet *NewBullet(Vector2 *vel, F64 x, F64 y)
+{
+  "\n[%f] [%f]",vel->x,vel->y;
+  Bullet *new = CAlloc(sizeof(Bullet));
+  new->vel.x = vel->x;
+  new->vel.y = vel->y;
+  new->myCollider = NewCollider(x, y, 8, 8, 3);
+  QueIns(new, bullet_que.last);
+  return new;
+}
+
+U0 DelBullet(Bullet *a)
+{
+  DelCollider(a->myCollider);
+  QueRem(a);
+  Free(a);
+}
+
+
 Bool AABBCollision(Collider *a, Collider *b)
 {
   if(a->pos.x > b->pos.x + b->size.x){
@@ -49,7 +75,7 @@ Bool AABBCollision(Collider *a, Collider *b)
   }
   if(a->pos.x + a->size.x < b->pos.x){
     return FALSE;
-  }
+  }
   if(a->pos.y > b->pos.y + b->size.y){
     return FALSE;
   }
@@ -84,9 +110,13 @@ U0 InitMapColliders()
   }
 }
 
+I64 g_MouseX = ms.pos.x;
+I64 g_MouseY = ms.pos.y;
+
 U0 Init()
 {
   QueInit(&collider_que);
+  QueInit(&bullet_que);
   plr.myCollider = NewCollider(320, 0, 12, 12, 1);
   plr.vel.x = 0;
   plr.vel.y = 0;
@@ -94,7 +124,7 @@ U0 Init()
   keys.up = FALSE;
   keys.down = FALSE;
   keys.left = FALSE;
-  keys.right = FALSE;
+  keys.right = FALSE;
   InitMapColliders;
 }
 

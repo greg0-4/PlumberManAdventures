@@ -1,5 +1,6 @@
 Cd(__DIR__);
 #include "Globals.HC";
+#include "Actions.HC";
 #include "Update.HC";
 #include "Draw.HC";
 
@@ -7,14 +8,19 @@ U0 CleanUp()
 {
   // Free all the queues and stuff
   QueDel(&collider_que);
+  QueDel(&bullet_que);
 }
 
 U0 DrawIt(CTask *task, CDC *dc)
 {
-  GrPrint(dc, 0,0, "Hello World!");  
+  // GrPrint(dc, 0,0, "[%d] [%d]", g_MouseX, g_MouseY);  
   UpdatePlrMove;
+  UpdateBullets;
   UpdateCam;
-  DrawColliders(dc);
+  ShootBulletLogic;
+  UpdateMousePos;
+  DrawBullets(dc);
+  DrawColliders(dc);
 }
 
 U0 Main()
@@ -29,12 +35,18 @@ U0 Main()
 
   while(g_Gaming)
   {
+      
       switch(GetMsg(&input1, &input2, 1<<MSG_KEY_DOWN+1<<MSG_KEY_UP))
       {
 	case MSG_KEY_UP:
 	  switch(input1)
           {
 	    case CH_SHIFT_ESC: g_Gaming = FALSE; break;
+	    case CH_SPACE: keys.space = FALSE; break;
+            case 'w': keys.up = FALSE; break;
+	    case 's': keys.down = FALSE; break;
+	    case 'a': keys.left = FALSE; break;
+	    case 'd': keys.right = FALSE; break;
 	    case 0:
 
 	      switch(input2.u8[0])$IV,0$
@@ -55,6 +67,11 @@ U0 Main()
 	case MSG_KEY_DOWN:
 	  switch(input1)
           {
+	      case CH_SPACE: keys.space = TRUE; break;
+	      case 'w': keys.up = TRUE; break;
+	      case 's': keys.down = TRUE; break;
+	      case 'a': keys.left = TRUE; break;
+	      case 'd': keys.right = TRUE; break;
 	      case 0:
 
 	      switch(input2.u8[0])

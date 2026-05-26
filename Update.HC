@@ -2,7 +2,7 @@
 U0 UpdateCam()
 {
   camOffset.x = plr.myCollider->pos.x - 320;
-  camOffset.y = plr.myCollider->pos.y - 240;
+  camOffset.y = plr.myCollider->pos.y - 240;
 }
 
 U0 UpdatePlrMove()
@@ -35,7 +35,7 @@ U0 UpdatePlrMove()
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
-    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp))
+    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp) && temp->type == 2)
     {
       if(plr.vel.x > 0)
       {
@@ -55,7 +55,7 @@ U0 UpdatePlrMove()
   while(temp != &collider_que)
   {
     next = temp->next;
-    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp))
+    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp) && temp->type == 2)
     {
       if(plr.vel.y > 0)
       {
@@ -70,3 +70,45 @@ U0 UpdatePlrMove()
   }
 
 }
+
+U0 UpdateMousePos()
+{
+  g_MouseX = ms.pos.x;
+  g_MouseY = ms.pos.y;
+}
+
+U0 UpdateBulletCollisions(Bullet *bullet)
+{
+  Collider *temp = collider_que.next;
+  while(temp != &collider_que)
+  {
+    Collider *next = temp->next;
+    if(temp != bullet->myCollider && AABBCollision(bullet->myCollider, temp) && temp->type == 2)
+    {
+      DelBullet(bullet);
+      return;
+    }
+    temp = next;
+  }
+}
+
+U0 UpdateBullets()
+{
+  Bullet *temp = bullet_que.next;
+  while(temp != &bullet_que)
+  {
+    Bullet *next = temp->next;
+    temp->myCollider->pos.x += temp->vel.x;
+    temp->myCollider->pos.y += temp->vel.y;
+    UpdateBulletCollisions(temp);    
+    temp = next;
+  }
+}
+
+
+
+
+
+
+
+
