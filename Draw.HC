@@ -6,6 +6,10 @@ U0 DrawColliders(CDC *dc)
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
+    if(temp->type == ENEMY_D_COLLIDER)
+    {
+      return;
+    }
     GrRect(dc, temp->pos.x - camOffset.x, temp->pos.y - camOffset.y, temp->size.x, temp->size.y);
     temp = next; 
   }
@@ -19,8 +23,10 @@ U0 DrawBullets(CDC *dc)
   while(temp != &bullet_que)
   {
     Bullet *next = temp->next;
-    GrPrint(dc, temp->myCollider->pos.x - camOffset.x, temp->myCollider->pos.y - camOffset.y, "[%f] [%f]",temp->vel.x,temp->vel.y);
+    GrPrint(dc, temp->myCollider->pos.x - camOffset.x, temp->myCollider->pos.y - camOffset.y, "[%f] [%f]",temp->vel.x,temp->vel.y);
     temp = next;
   }
   dc->color = BLACK;
 }
+
+

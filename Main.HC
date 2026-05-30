@@ -13,12 +13,15 @@ U0 CleanUp()
 
 U0 DrawIt(CTask *task, CDC *dc)
 {
-  // GrPrint(dc, 0,0, "[%d] [%d]", g_MouseX, g_MouseY);  
+  // GrPrint(dc, 0,0, "[%d] [%d]", g_MouseX, g_MouseY);  
   UpdatePlrMove;
   UpdateBullets;
   UpdateCam;
+
   ShootBulletLogic;
   UpdateMousePos;
+
+
   DrawBullets(dc);
   DrawColliders(dc);
 }
@@ -28,9 +31,10 @@ U0 Main()
   DocClear;
   WinMax;
   SettingsPush;
+  AutoComplete;
   WinBorder;
   DocCursor;
-  Fs->draw_it = &DrawIt;
+  Fs->draw_it = &DrawIt;
   I64 input1, input2;
 
   while(g_Gaming)

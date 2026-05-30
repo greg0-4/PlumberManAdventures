@@ -1,3 +1,11 @@
+#define PLR_COLLIDER 1
+#define WALL_COLLIDER 2
+#define BULLET_COLLIDER 3
+#define ENEMY_COLLIDER 4
+#define ENEMY_D_COLLIDER 5
+
+#define GRAVITY 1
+
 Bool g_Gaming = TRUE;
 
 class Vector2
@@ -16,6 +24,7 @@ class Player
 {
   Collider *myCollider;
   Vector2 vel;
+  Bool grounded;
 } plr;
 
 class Keys
@@ -29,6 +38,7 @@ class Bullet : CQue
   Collider *myCollider;
 } bullet_que;
 
+// for pathfinding
 
 Collider *NewCollider(F64 x1, F64 y1, F64 x2, F64 y2, F64 type)
 {
@@ -47,7 +57,6 @@ U0 DelCollider(Collider *a)
   QueRem(a);
   Free(a);
 }
-
 
 Bullet *NewBullet(Vector2 *vel, F64 x, F64 y)
 {
@@ -75,7 +84,7 @@ Bool AABBCollision(Collider *a, Collider *b)
   }
   if(a->pos.x + a->size.x < b->pos.x){
     return FALSE;
-  }
+  }
   if(a->pos.y > b->pos.y + b->size.y){
     return FALSE;
   }
@@ -86,10 +95,10 @@ Bool AABBCollision(Collider *a, Collider *b)
 }
 
 I64 gameMap[4][5] = {
-  {1,1,1,1,1},
-  {1,0,0,0,1},
-  {1,0,0,0,1},
-  {1,0,0,1,1}
+  {1,0,0,1,0},
+  {1,0,0,0,0},
+  {1,0,0,0,0},
+  {1,1,1,1,1}
 };
 
 Vector2 camOffset;
@@ -117,7 +126,7 @@ U0 Init()
 {
   QueInit(&collider_que);
   QueInit(&bullet_que);
-  plr.myCollider = NewCollider(320, 0, 12, 12, 1);
+  plr.myCollider = NewCollider(0, 0, 12, 12, 1);
   plr.vel.x = 0;
   plr.vel.y = 0;
 
@@ -125,6 +134,7 @@ U0 Init()
   keys.down = FALSE;
   keys.left = FALSE;
   keys.right = FALSE;
+  keys.space = FALSE;
   InitMapColliders;
 }
 
