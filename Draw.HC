@@ -1,4 +1,18 @@
 
+U0 DrawSky(CDC *dc)
+{
+  dc->dither_probability_u16=1;
+  dc->color=ROPF_DITHER+LTBLUE<<16+WHITE;
+  GrRect3(dc,0,0,0,640,480);
+  GrBlot(dc, 500, 50, tex_Sun);
+  GrBlot(dc, 100, 100, tex_Cloud);
+  GrBlot(dc, 120, 105, tex_Cloud);
+ GrBlot(dc, 220, 100, tex_Cloud);
+ GrBlot(dc, 300, 90, tex_Cloud);
+ GrBlot(dc, 320, 100, tex_Cloud);
+  dc->color = BLACK;
+}
+
 U0 DrawColliders(CDC *dc)
 {
   dc->color = GREEN;
@@ -29,4 +43,48 @@ U0 DrawBullets(CDC *dc)
   dc->color = BLACK;
 }
 
-
+U0 DrawMap(CDC *dc)
+{
+  dc->color = BLACK;
+  I64 x, y;
+  for(x=0;x<current_map.width;x++)
+  {
+    for(y=0;y<current_map.height;y++)
+    {
+      I64 tile = current_map.mapArray[x + y * current_map.width];
+      I64 posX = (x * 24) - camOffset.x;
+      I64 posY = (y * 24) - camOffset.y;
+      if(posX < -26)
+      {
+        break;
+      }
+      switch(tile)
+      {
+
+	case 1: GrBlot(dc, x * 24 - camOffset.x, y * 24 - camOffset.y, tex_Tile); break;
+      }
+    }
+  }
+  dc->color = BLACK;
+}
+
+U0 DrawPlayer(CDC *dc)
+{
+  GrBlot(dc,
+  plr.myCollider->pos.x - camOffset.x - 6,
+  plr.myCollider->pos.y - camOffset.y,
+  plr.curSprite);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
