@@ -1,12 +1,59 @@
 
+U0 SlugPlrCollision(Collider *a)
+{
+  Slug *temp = slug_que.next;
+  while(temp != &slug_que)
+  {
+    Slug *next = temp->next;
+    if(plr.myCollider == a)
+    {
+      goto col_cont;
+    }
+    if(plr.footCol == a)
+    {
+      goto col_cont;
+    }
+    if(temp->myCol != a)
+    {
+      goto col_cont;
+    }
+
+    if(AABBCollision(plr.footCol, temp->myCol))
+    {
+      if(plr.vel.y > 0)
+      {
+        plr.vel.y = -8;
+        NewParticle(temp->myCol->pos.x,
+        temp->myCol->pos.y,
+        temp->curSprite,
+        0,
+        -8);
+        DelSlug(temp);
+        return;
+        
+      }
+      else
+      {
+        PlayerDie;
+      }
+    }
+    col_cont:
+    temp = next;
+  }
+}
+
 U0 UpdateCam()
 {
   if(plr.myCollider->pos.x > 320)
   {
   camOffset.x = plr.myCollider->pos.x - 320;
   }
+  else{
+  camOffset.x = 0;
+  }
   camOffset.y = 0;
 }
+
 
 U0 UpdatePlrMove()
 {
@@ -17,13 +64,18 @@ U0 UpdatePlrMove()
   plrCol.isColLeft = FALSE;
   plrCol.isColRight = FALSE;
 
-  if(keys.shift)
+  if(keys.shift && !plr.isJumping)
   {
     plr.acceleration = 2.0;
   }
-  else
+  else if(!keys.shift && !plr.isJumping)
   {
     plr.acceleration = 1.5;
+  }
+
+  if(plr.isJumping && !keys.shift)
+  {
+    plr.vel.x /= FRICTION * 1.05;
   }
 
   if(keys.left)
@@ -59,6 +111,7 @@ U0 UpdatePlrMove()
     Collider *next = temp->next;
     if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp) && temp->type == 2)
     {
+
       if(plr.vel.x > 0)
       {
         plr.myCollider->pos.x = temp->pos.x - plr.myCollider->size.x;
@@ -71,7 +124,14 @@ U0 UpdatePlrMove()
       }
       plr.vel.x = 0;
       plr.isWalking = FALSE;
+      goto colx_continue;
     }
+
+    if(temp != plr.myCollider && temp->type == ENEMY_COLLIDER)
+    {
+      SlugPlrCollision(temp);
+    }
+    colx_continue:
     temp = next;
   }
   plr.vel.y += plr.gravity;
@@ -111,26 +171,32 @@ U0 UpdatePlrMove()
     }
     temp = next;
   }
-
-
+  if(!plr.grounded)
+  {
+    plr.isJumping = TRUE;
+  }
   if(plr.vel.y != 0)
   {
     plr.grounded = FALSE;
   }
-
   if(keys.up && plr.grounded)
   {
     plr.vel.y = -12;
     plr.grounded = FALSE;
     plr.isJumping = TRUE;
   }
-
-
+  if(keys.shift)
+  {
+    plr.walk_frameSpeedReset = 2;
+  }
+  else
+  {
+    plr.walk_frameSpeedReset = 3;
+  }
   if(plr.grounded)
   {
     plr.isJumping = FALSE;
   }
-
   // jumping higher when holding jump
   if(keys.up && plr.vel.y < 0)
   {
@@ -141,6 +207,13 @@ U0 UpdatePlrMove()
     plr.gravity = 1.5;
   }
 
+  if(plr.myCollider->pos.y >= 500)
+  {
+    PlayerDie;
+  }
+  
+  plr.footCol->pos.x = plr.myCollider->pos.x + 2;
+  plr.footCol->pos.y = plr.myCollider->size.y + plr.myCollider->pos.y;
 }
 
 CDC *GetPlayerWalkSprite(I8 frameNumber)
@@ -200,10 +273,6 @@ U0 UpdatePlayerAnimation()
    plr.curSprite = GetPlayerIdleSprite;
   if(plr.isWalking && !plr.isJumping)
   {
-    if(plr.isJumping)
-      return;
-    if(plr.isFalling)
-      return;
     plr.walk_frameSpeed--;
     if(plr.walkFrame > 3)
     {
@@ -212,7 +281,7 @@ U0 UpdatePlayerAnimation()
     if(plr.walk_frameSpeed <= 0)
     {
       plr.walkFrame++; 
-      plr.walk_frameSpeed = 5;
+      plr.walk_frameSpeed = plr.walk_frameSpeedReset;
     }
 
     plr.curSprite = GetPlayerWalkSprite(plr.walkFrame);
@@ -239,7 +308,7 @@ Bool CheckBulletCollision(Bullet *bullet)
     Collider *next = temp->next;
     if(temp != bullet->myCollider && AABBCollision(bullet->myCollider, temp) && temp->type == 2)
     {
-      // DelBullet(bullet);
+      // DelBullet(bullet);
       return TRUE;
     }
     temp = next;
@@ -286,11 +355,142 @@ U0 UpdateBullets()
 
 
 
+// Enemy Logic
+
+U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
+{
+  // X axis collision loop
+  Collider *temp = collider_que.next;
+  while(temp != &collider_que)
+  {
+    Collider *next = temp->next;
+    if(temp == a->myCol)
+    {
+      
+      goto enemy_continue;
+    }
+
+    if(temp->type != WALL_COLLIDER)
+    {
+      goto enemy_continue;
+    }
+
+    if(AABBCollision(a->myCol, temp))
+    {
+      if(!yAxis)
+      {
+	if(a->vel.x < 0)
+	{
+          a->myCol->pos.x = temp->pos.x + temp->size.x;
+	}
+	else
+	{
+          a->myCol->pos.x = temp->pos.x - a->myCol->size.x;
+	}
+	a->isLookingRight = !a->isLookingRight;
+      }
+      else
+      {
+ 	if(a->vel.y < 0)
+	{
+	  a->myCol->pos.y = temp->pos.y - a->myCol->size.y;
+	}
+	 else
+	{
+	  a->myCol->pos.y = temp->pos.y - a->myCol->size.y;
+	}
+	a->vel.y = 0;
+      }
+
+    }
+    enemy_continue:
+    temp = next;
+  }
+}
 
 
 
+U0 UpdateEnemy(Enemy *a)
+{
+  if(a->isLookingRight)
+  {
+    a->vel.x = a->speed;
+  }
+  else
+  {
+    a->vel.x = -a->speed;
+  }
+  a->myCol->pos.x += a->vel.x;
+  EnemyCollisions(a);
+  a->vel.y += GRAVITY;
+
+
+ 
+  a->myCol->pos.y += a->vel.y;
+  EnemyCollisions(a, TRUE);
+}
+
+CDC GetSlugSprite(Slug *a)
+{
+  if(a->isLookingRight)
+  {
+    switch(a->curFrame)
+    {
+      default: return tex_Slug_Walk1Right; break;
+      case 1: return tex_Slug_Walk1Right; break;
+      case 2: return tex_Slug_Walk2Right; break;
+    }
+  }
+  else
+  {
+    switch(a->curFrame)
+    {
+      default: return tex_Slug_Walk1Left; break;
+      case 1: return tex_Slug_Walk1Left; break;
+      case 2: return tex_Slug_Walk2Left; break;
+    }
+  }
+}
+
+U0 UpdateSlugAnimation(Slug *a)
+{
+  a->walk_frameSpeed--;
+  a->curSprite = GetSlugSprite(a);
+  if(a->curFrame > 2)
+  {
+    a->curFrame = 1;
+  }
+  if(a->walk_frameSpeed <= 0)
+  {
+    a->walk_frameSpeed = 5;
+    a->curFrame++;
+  } 
+}
+
+U0 UpdateSlugs()
+{
+  Slug *temp = slug_que.next;
+  while(temp != &slug_que)
+  {
+    Slug *next = temp->next;
+    UpdateEnemy(temp);
+    UpdateSlugAnimation(temp);
+    temp = next;
+  }
+}
 
 
 
-
+U0 UpdateParticles()
+{
+  Particle *temp = particle_que.next;
+  while(temp != &particle_que)
+  {
+    Particle *next = temp->next;
+    temp->pos.x += temp->vel.x;
+    temp->vel.y += GRAVITY;
+    temp->pos.y += temp->vel.y;
+    temp = next;
+  }
+}
 

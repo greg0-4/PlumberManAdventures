@@ -19,6 +19,7 @@ U0 CleanUp()
 {
   // Free all the queues and stuff
   QueDel(&collider_que);
+  QueDel(&slug_que);
   QueDel(&bullet_que);
 }
 
@@ -30,16 +31,20 @@ U0 DrawIt(CTask *task, CDC *dc)
   UpdateBullets;
   UpdateCam;
 
-  ShootBulletLogic;
+  UpdateSlugs;
+  UpdateParticles;
+
+  ShootBulletLogic;
   UpdateMousePos;
 
 
   DrawBullets(dc);
   DrawColliders(dc);
   DrawMap(dc);
-  
+  DrawSlugs(dc);  
   UpdatePlayerAnimation;
   DrawPlayer(dc);
+  DrawParticles(dc);
   dc->color = WHITE;
   GrPrint(dc, 0, 0, "%f",Abs(plr.isJumping));
 }
@@ -91,6 +96,7 @@ U0 Main()
 	  switch(input1)
           {
 	      case CH_SPACE: case CH_SHIFT_SPACE: keys.space = TRUE; break;
+	      case CH_ESC: g_Gaming = FALSE; break;
 	      case 'w': case 'W': keys.up = TRUE; break;
 	      case 's': case 'S': keys.down = TRUE; break;
 	      case 'a': case 'A': keys.left = TRUE; break;

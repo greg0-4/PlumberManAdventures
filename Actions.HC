@@ -4,7 +4,7 @@ U0 ShootBulletLogic()
   if(keys.space)
   {
     I64 bulletSpeed = 10;
-    F64 distanceX = ms.pos.x - plr.myCollider->pos.x;
+    F64 distanceX = ms.pos.x - plr.myCollider->pos.x;
     F64 distanceY = ms.pos.y - plr.myCollider->pos.y;
     
     F64 totalDistance = Sqrt((distanceX * distanceX) + (distanceY * distanceY));
@@ -17,4 +17,4 @@ U0 ShootBulletLogic()
     keys.space = FALSE;
   }
 
-}
+}

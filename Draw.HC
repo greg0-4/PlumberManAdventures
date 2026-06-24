@@ -71,13 +71,40 @@ U0 DrawMap(CDC *dc)
 U0 DrawPlayer(CDC *dc)
 {
   GrBlot(dc,
-  plr.myCollider->pos.x - camOffset.x - 6,
-  plr.myCollider->pos.y - camOffset.y,
+  plr.myCollider->pos.x - camOffset.x - 6,
+  plr.myCollider->pos.y - camOffset.y - 1,
   plr.curSprite);
 }
 
+U0 DrawSlugs(CDC *dc)
+{
+  Slug *temp = slug_que.next;
+  while(temp != &slug_que)
+  {
+    Slug *next = temp->next;
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.y - 12 -  camOffset.y,
+    temp->curSprite);
+    temp = next;
+    
+  }
+  
+}
 
-
+U0 DrawParticles(CDC *dc)
+{
+  Particle *temp = particle_que.next;
+  while(temp != &particle_que)
+  {
+    Particle *next = temp->next;
+    GrBlot(dc,
+    temp->pos.x - camOffset.x,
+    temp->pos.y - camOffset.y,
+    temp->curSprite);
+    temp = next;
+  }
+}
 
 
 
