@@ -78,6 +78,40 @@ U0 TurtlePlrCollision(Collider *a)
   }
 }
 
+U0 TShellPlrCollision(Collider *a)
+{
+  TShell *temp = tshell_que.next;
+  while(temp != &tshell_que)
+  {
+    TShell *next = temp->next;
+    if(plr.myCollider == a)
+      goto cont;
+    if(plr.footCol == a)
+      goto cont;
+    if(temp->myCol != a)
+      goto cont;
+
+    if(AABBCollision(plr.footCol, temp->myCol))
+    {
+      if(plr.vel.y > 0)
+      {
+        plr.vel.y = -10;
+	temp->Health = 0;
+	return;
+      }
+    }
+
+    if(AABBCollision(plr.myCollider, temp->myCol))
+    {
+      PlayerDie;
+    }
+
+    cont:
+    temp = next;
+  }
+}
+
+
 U0 UpdateCam()
 {
   if(plr.myCollider->pos.x > 320)
@@ -163,11 +197,18 @@ U0 UpdatePlrMove()
       goto colx_continue;
     }
 
-    if(temp != plr.myCollider && temp->type == ENEMY_COLLIDER)
+    if(temp != plr.myCollider)
     {
-      SlugPlrCollision(temp);
-      TurtlePlrCollision(temp);
-     }
+      if(temp->type == ENEMY_COLLIDER)
+      {
+        SlugPlrCollision(temp);
+        TurtlePlrCollision(temp);
+      }
+      if(temp->type == TSHELL_COLLIDER)
+      {
+	TShellPlrCollision(temp);
+      }
+    }
     colx_continue:
     temp = next;
   }
@@ -405,6 +446,10 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
+    if(temp == plr.myCollider || temp == plr.footCol)
+    {
+      goto enemy_continue;
+    }
     if(temp == a->myCol)
     {      
       goto enemy_continue;
@@ -467,7 +512,7 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
       if(a->myCol->type == ENEMY_COLLIDER && temp->type == TSHELL_COLLIDER)
       {
 	a->Health = 0;
-	return;
+	return;
       }
 
       if(a->myCol->type == TSHELL_COLLIDER && temp->type == TSHELL_COLLIDER)
@@ -571,7 +616,7 @@ CDC GetSlugSprite(Slug *a)
       case 2: return tex_Slug_Walk2Left; break;
     }
   }
-}
+}
 
 U0 UpdateSlugAnimation(Slug *a)
 {
@@ -620,6 +665,8 @@ U0 UpdateParticles()
     temp->pos.x += temp->vel.x;
     temp->vel.y += GRAVITY;
     temp->pos.y += temp->vel.y;
+    if(temp->pos.y - camOffset.y > 500)
+      DelParticle(temp);
     temp = next;
   }
 }

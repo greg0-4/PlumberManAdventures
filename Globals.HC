@@ -66,6 +66,7 @@ class Bullet : CQue
 class Map
 {
   I64 *mapArray;
+  I64 *entityArray;
   I64 width;
   I64 height;
 } current_map;
@@ -230,6 +231,11 @@ Particle *NewParticle(F64 x, F64 y, CDC *sprite, F64 velX = 0, F64 velY = 0)
   return new;
 }
 
+U0 DelParticle(Particle *a)
+{
+  QueRem(a);
+  Free(a);
+}
 
 Bool AABBCollision(Collider *a, Collider *b)
 {
@@ -254,7 +260,7 @@ I64 gameMap[MAP_HEIGHT][20] = {
   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
   {1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,1,4,0,0,0,0,4,1,0},
+  {1,0,0,0,0,0,0,0,0,0,0,1,4,0,0,0,0,4,1,0},
   {1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0},
   {1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
   {1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0},
@@ -272,7 +278,7 @@ U0 InitMapEntities()
   {
     for(y=0;y<current_map.height;y++)
     {
-      I64 tile = current_map.mapArray[x + y * current_map.width];
+      I64 tile = current_map.entityArray[x + y * current_map.width];
       switch(tile)
       {
 	case 1: NewCollider(x*24,y*24,24,24,2); break;
@@ -289,13 +295,61 @@ U0 InitMapEntities()
 
 I64 g_MouseX = ms.pos.x;
 I64 g_MouseY = ms.pos.y;
+
+U0 LoadMap(U8 *file)
+{
+  U8 *buffer = FileRead(file);
+  if(buffer == NULL)
+  {
+    return;
+  }
+  U8 *ptr = buffer;
+
+  I64 width = Str2I64(ptr, 10 , &ptr);
+  ptr++;
+  I64 height = Str2I64(ptr, 10, &ptr);
+
+
+  I64 *mapArray = MAlloc(width * height * sizeof(I64));
+  I64 *entityArray = MAlloc(width * height * sizeof(I64));
+  I64 x, y;
+  for(y=0;y<height;y++)
+  {
+    for(x=0;x<width;x++)
+    {
+      while(*ptr == ' ' || *ptr == '\n' || *ptr == '\r')
+      {
+        ptr++;
+      }
+      mapArray[x + y * width] = Str2I64(ptr, 10, &ptr);
+    }
+  }
+
+  for(y=0;y<height;y++)
+  {
+    for(x=0;x<width;x++)
+    {
+      while(*ptr == ' ' || *ptr == '\n' || *ptr == '\r') ptr++;
+      entityArray[x + y * width] = Str2I64(ptr, 10, &ptr);
+    }
+  }
+
+
+  Free(buffer);
+  current_map.mapArray = mapArray;
+  current_map.entityArray = entityArray;
+  current_map.width = width;
+  current_map.height = height;
+}
 
 
 U0 Init()
 {
-  current_map.mapArray = &gameMap;
+
+  LoadMap("Maps/Test.TXT");
+/*  current_map.mapArray = &gameMap;
   current_map.width = 20;
-  current_map.height = MAP_HEIGHT;
+  current_map.height = MAP_HEIGHT; */
   QueInit(&collider_que);
   QueInit(&particle_que);
   QueInit(&bullet_que);
@@ -327,6 +381,7 @@ U0 Init()
   keys.left = FALSE;
   keys.right = FALSE;
   keys.space = FALSE;
+  LoadMap("/Maps/Test.TXT");
   InitMapEntities;
 }
 

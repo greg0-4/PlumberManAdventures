@@ -1,4 +1,4 @@
-Cd(__DIR__);
+Cd(__DIR__);;
 #include "SpriteLoad.HC";
 #include "Globals.HC";
 #include "Actions.HC";
@@ -26,13 +26,14 @@ U0 CleanUp()
 U0 DrawIt(CTask *task, CDC *dc)
 {
   DCFill(dc, BLACK);
+
   DrawSky(dc);
   UpdatePlrMove;
   UpdateBullets;
   UpdateCam;
 
   UpdateSlugs;
-  UpdateTShells;
+  UpdateTShells;
   UpdateTurtles;
   UpdateParticles;
 
@@ -50,7 +51,7 @@ U0 DrawIt(CTask *task, CDC *dc)
   DrawPlayer(dc);
   DrawParticles(dc);
   dc->color = WHITE;
-  GrPrint(dc, 0, 0, "%f",Abs(plr.isJumping));
+  GrPrint(dc, 24, 0, "%d",QueCnt(particle_que));
 }
 
 U0 Main()
@@ -129,5 +130,5 @@ U0 Main()
   SettingsPop;
   GrPaletteSet(gr_palette_std);
 }
-
+
 Main;

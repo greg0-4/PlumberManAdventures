@@ -20,7 +20,7 @@ dc->color=ROPF_DITHER+GREEN<<16+TRANSPARENT;
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
-    GrRect(dc, temp->pos.x - camOffset.x, temp->pos.y - camOffset.y, temp->size.x, temp->size.y);
+    GrRect(dc, temp->pos.x - camOffset.x, temp->pos.y - camOffset.y, temp->size.x, temp->size.y);
     temp = next; 
   }
   dc->color = BLACK;
@@ -138,3 +138,4 @@ U0 DrawTShells(CDC *dc)
 
 
 
+
