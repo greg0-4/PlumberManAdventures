@@ -18,7 +18,7 @@ U0 SlugPlrCollision(Collider *a)
       goto col_cont;
     }
 
-    if(AABBCollision(plr.footCol, temp->myCol))
+    if(AABBCollision(plr.footCol, temp->myCol))
     {
       if(plr.vel.y > 0)
       {
@@ -32,12 +32,48 @@ U0 SlugPlrCollision(Collider *a)
         return;
         
       }
-      else
-      {
-        PlayerDie;
-      }
+    }
+
+    if(AABBCollision(plr.myCollider, temp->myCol))
+    {
+      PlayerDie;
     }
     col_cont:
+    temp = next;
+  }
+}
+
+U0 TurtlePlrCollision(Collider *a)
+{
+  Turtle *temp = turtle_que.next;
+  while(temp != &turtle_que)
+  {
+    Turtle *next = temp->next;
+
+    if(plr.myCollider == a)
+      goto cont;
+    if(plr.footCol == a)
+      goto cont;
+    if(temp->myCol != a)
+      goto cont;
+
+    if(AABBCollision(plr.footCol, temp->myCol))
+    {
+      if(plr.vel.y > 0)
+      {
+	plr.vel.y = -10;
+	temp->Health = 0;
+        return;
+      }
+    }
+
+
+    if(AABBCollision(plr.myCollider, temp->myCol))
+    {
+      PlayerDie;
+    }
+
+    cont:
     temp = next;
   }
 }
@@ -130,7 +166,8 @@ U0 UpdatePlrMove()
     if(temp != plr.myCollider && temp->type == ENEMY_COLLIDER)
     {
       SlugPlrCollision(temp);
-    }
+      TurtlePlrCollision(temp);
+     }
     colx_continue:
     temp = next;
   }
@@ -359,24 +396,99 @@ U0 UpdateBullets()
 
 U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
 {
+
+  // Ignore if enemy marked for death
+  if(a->Health <= 0) return;
+
   // X axis collision loop
   Collider *temp = collider_que.next;
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
     if(temp == a->myCol)
-    {
-      
+    {      
       goto enemy_continue;
     }
+
+    if(a->myCol->type == ENEMY_COLLIDER && temp->type == ENEMY_COLLIDER)
+    {
+      goto enemy_shell_cont;
+    }
+
+    if(a->myCol->type == TSHELL_COLLIDER || temp->type == TSHELL_COLLIDER)
+    {
+      goto enemy_shell_cont;
+    }
+ 
 
     if(temp->type != WALL_COLLIDER)
     {
       goto enemy_continue;
     }
 
+
+    enemy_shell_cont:
+
     if(AABBCollision(a->myCol, temp))
     {
+
+      if(a->myCol->type == ENEMY_COLLIDER && temp->type == ENEMY_COLLIDER)
+      {
+	goto bounceOff;
+      }
+
+      if(a->myCol->type == TSHELL_COLLIDER && temp->type == ENEMY_COLLIDER)
+      {
+	Enemy *e_temp = slug_que.next;
+	while(e_temp != &slug_que)
+	{
+	   Enemy *e_next = e_temp->next;
+	   if(e_temp->myCol == temp)
+	   {
+	     e_temp->Health = 0;
+	     return;
+	   }
+	   e_temp = e_next;
+	}
+	e_temp = turtle_que.next;
+	while(e_temp != &turtle_que)
+	{
+	   e_next = e_temp->next;
+	   if(e_temp->myCol == temp)
+	   {
+	     e_temp->Health = 0;
+	     return;
+	   }
+	   e_temp = e_next;
+	}
+	return;
+      }
+
+      if(a->myCol->type == ENEMY_COLLIDER && temp->type == TSHELL_COLLIDER)
+      {
+	a->Health = 0;
+	return;
+      }
+
+      if(a->myCol->type == TSHELL_COLLIDER && temp->type == TSHELL_COLLIDER)
+      {
+        a->Health = 0;
+        TShell *shell_temp = tshell_que.next;
+	while(shell_temp != &tshell_que)
+	{
+	   TShell *shell_next = shell_temp->next;
+	   if(shell_temp->myCol == temp)
+	   {
+	     shell_temp->Health = 0;
+	     break;
+	   }
+	   shell_temp = shell_next;
+	}
+	return;
+      }
+
+
+      bounceOff:
       if(!yAxis)
       {
 	if(a->vel.x < 0)
@@ -388,6 +500,7 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
           a->myCol->pos.x = temp->pos.x - a->myCol->size.x;
 	}
 	a->isLookingRight = !a->isLookingRight;
+        goto enemy_continue;
       }
       else
       {
@@ -411,7 +524,18 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
 
 
 U0 UpdateEnemy(Enemy *a)
-{
+{ 
+  if(!a->active)
+  {
+    if(a->myCol->pos.x - camOffset.x < 640)
+    {
+      a->active = TRUE;
+    }
+    else
+    {
+      return;
+    }
+  }
   if(a->isLookingRight)
   {
     a->vel.x = a->speed;
@@ -422,10 +546,7 @@ U0 UpdateEnemy(Enemy *a)
   }
   a->myCol->pos.x += a->vel.x;
   EnemyCollisions(a);
-  a->vel.y += GRAVITY;
-
-
- 
+  a->vel.y += GRAVITY; 
   a->myCol->pos.y += a->vel.y;
   EnemyCollisions(a, TRUE);
 }
@@ -475,6 +596,15 @@ U0 UpdateSlugs()
     Slug *next = temp->next;
     UpdateEnemy(temp);
     UpdateSlugAnimation(temp);
+    if(temp->Health <= 0)
+    {
+      NewParticle(temp->myCol->pos.x,
+      temp->myCol->pos.y,
+      temp->curSprite);
+      DelSlug(temp);
+      goto slug_nxt;
+    }
+    slug_nxt:
     temp = next;
   }
 }
@@ -494,3 +624,82 @@ U0 UpdateParticles()
   }
 }
 
+
+CDC *GetTurtleSprite(Turtle *a)
+{
+  if(a->isLookingRight)
+  {
+    switch(a->curFrame)
+    {
+      default: return tex_Turtle_Walk1Right; break;
+      case 1: return tex_Turtle_Walk1Right; break;
+      case 2: return tex_Turtle_Walk2Right; break;
+    }
+  }
+  else
+  {
+    switch(a->curFrame)
+    {
+      default: return tex_Turtle_Walk1Left; break;
+      case 1: return tex_Turtle_Walk1Left; break;
+      case 2: return tex_Turtle_Walk2Left; break;
+    }
+  }
+}
+
+U0 UpdateTurtleAnimation(Turtle *a)
+{
+  a->walk_frameSpeed--;
+  a->curSprite = GetTurtleSprite(a);
+  if(a->curFrame > 2)
+  {
+    a->curFrame = 1;
+  }
+  if(a->walk_frameSpeed <= 0)
+  {
+    a->walk_frameSpeed = 10;
+    a->curFrame++;
+  }
+}
+
+U0 UpdateTurtles()
+{
+  Turtle *temp = turtle_que.next;
+  while(temp != &turtle_que)
+  {
+    Turtle *next = temp->next;
+    UpdateEnemy(temp);
+    UpdateTurtleAnimation(temp);
+    if(temp->Health <= 0)
+    {
+      NewTShell(temp->myCol->pos.x,
+      temp->myCol->pos.y,
+      temp->isLookingRight);
+      DelTurtle(temp);
+      goto turtle_nxt;
+    }
+    turtle_nxt:
+    temp = next;
+  }
+}
+
+U0 UpdateTShells()
+{
+  TShell *temp = tshell_que.next;
+  while(temp != &tshell_que)
+  {
+    TShell *next = temp->next;
+    UpdateEnemy(temp);
+    if(temp->Health <= 0)
+    {
+      NewParticle(temp->myCol->pos.x,
+      temp->myCol->pos.y,
+      temp->curSprite);
+      DelTShell(temp);
+      goto tshell_nxt;
+    }
+    tshell_nxt:
+
+    temp = next;
+  }
+}

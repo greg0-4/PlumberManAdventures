@@ -16,7 +16,14 @@ CDC *tex_PMan_Walk3Left = GRRead("Sprites/PMan/Walk3Left.GR.Z");
 CDC *tex_PMan_JumpLeft = GRRead("Sprites/PMan/JumpLeft.GR.Z");
 CDC *tex_PMan_JumpRight = GRRead("Sprites/PMan/JumpRight.GR.Z");
 
-CDC *tex_Slug_Walk1Left = GRRead("Sprites/Slug/Walk1Left.GR");
-CDC *tex_Slug_Walk2Left = GRRead("Sprites/Slug/Walk2Left.GR");
-CDC *tex_Slug_Walk1Right = GRRead("Sprites/Slug/Walk1Right.GR");
-CDC *tex_Slug_Walk2Right = GRRead("Sprites/Slug/Walk2Right.GR");
+CDC *tex_Slug_Walk1Left = GRRead("Sprites/Slug/Walk1Left.GR.Z");
+CDC *tex_Slug_Walk2Left = GRRead("Sprites/Slug/Walk2Left.GR.Z");
+CDC *tex_Slug_Walk1Right = GRRead("Sprites/Slug/Walk1Right.GR.Z");
+CDC *tex_Slug_Walk2Right = GRRead("Sprites/Slug/Walk2Right.GR.Z");
+
+CDC *tex_Turtle_Walk1Left = GRRead("Sprites/Turtle/Walk1Left.GR.Z");
+CDC *tex_Turtle_Walk2Left = GRRead("Sprites/Turtle/Walk2Left.GR.Z");
+CDC *tex_Turtle_Walk1Right = GRRead("Sprites/Turtle/Walk1Right.GR.Z");
+CDC *tex_Turtle_Walk2Right = GRRead("Sprites/Turtle/Walk2Right.GR.Z");
+
+CDC *tex_Turtle_Shell = GRRead("Sprites/Turtle/Shell.GR.Z");

@@ -2,7 +2,7 @@
 #define WALL_COLLIDER 2
 #define BULLET_COLLIDER 3
 #define ENEMY_COLLIDER 4
-#define ENEMY_D_COLLIDER 5
+#define TSHELL_COLLIDER 5
 
 #define GRAVITY 1
 #define FRICTION 1.3
@@ -74,20 +74,31 @@ class Enemy : CQue
 {
   Collider *myCol;
   Vector2 vel;
-
+  I64 Health;
+  Bool active;
   Bool grounded;
   Bool isLookingRight;
-  I64 speed;
+  F64 speed;
   CDC *curSprite;
 };
 
 class Slug : Enemy
 {
-  I64 Health;
   I64 walk_frameSpeed;
   I64 curFrame;
 
 } slug_que;
+
+class Turtle : Enemy
+{
+  I64 walk_frameSpeed;
+  I64 curFrame;
+} turtle_que;
+
+class TShell : Enemy
+{
+  
+} tshell_que;
 
 class Particle : CQue
 {
@@ -122,6 +133,7 @@ Slug *NewSlug(F64 x, F64 y)
   new->myCol = NewCollider(x, y, 24, 12, ENEMY_COLLIDER);
   new->vel.x = 0;
   new->vel.y = 0;
+  new->active = FALSE;
   new->grounded = FALSE;
   new->isLookingRight = FALSE;
   new->curSprite = tex_Slug_Walk1Left;
@@ -134,6 +146,54 @@ Slug *NewSlug(F64 x, F64 y)
 }
 
 U0 DelSlug(Slug *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
+Turtle *NewTurtle(F64 x, F64 y)
+{
+  Turtle *new = CAlloc(sizeof(Turtle));
+  new->myCol = NewCollider(x, y, 22, 12, ENEMY_COLLIDER);
+  new->vel.x = 0;
+  new->active = FALSE;
+  new->vel.y = 0;
+  new->Health = 1;
+  new->grounded = FALSE;
+  new->isLookingRight = FALSE;
+  new->curSprite = tex_Turtle_Walk1Left;
+  new->walk_frameSpeed = 5;
+  new->curFrame = 1;
+  new->speed = 1.5;
+  QueIns(new, turtle_que.last);
+  return new;
+}
+
+U0 DelTurtle(Turtle *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
+TShell *NewTShell(F64 x, F64 y, Bool isLookingRight)
+{
+  TShell *new = CAlloc(sizeof(TShell));
+  new->myCol = NewCollider(x, y, 15, 9, TSHELL_COLLIDER);
+  new->Health = 1;
+  new->curSprite = tex_Turtle_Shell;
+  new->vel.x = 0;
+  new->active = FALSE;
+  new->vel.y = 0;
+  new->grounded = FALSE;
+  new->isLookingRight = isLookingRight;
+  new->speed = 3;
+  QueIns(new, tshell_que);
+  return new;
+}
+
+U0 DelTShell(TShell *a)
 {
   DelCollider(a->myCol);
   QueRem(a);
@@ -189,15 +249,15 @@ I64 gameMap[MAP_HEIGHT][20] = {
   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
   {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0},
+  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
   {1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},
+  {1,0,0,0,0,0,0,0,0,0,0,1,4,0,0,0,0,4,1,0},
+  {1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0},
   {1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0},
+  {1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0},
   {1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,3,0,1,0,0},
   {1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1},
   {1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1}
@@ -221,6 +281,7 @@ U0 InitMapEntities()
 	  plr.myCollider->pos.y = y * 24 + 6;
 	break;
         case 3: NewSlug(x*24,y*24); break;
+	case 4: NewTurtle(x*24,y*24 + 12); break;
       }
     }
   }
@@ -239,9 +300,11 @@ U0 Init()
   QueInit(&particle_que);
   QueInit(&bullet_que);
   QueInit(&slug_que);
+  QueInit(&turtle_que);
+  QueInit(&tshell_que);
 
   plr.myCollider = NewCollider(0, 0, 12, 22, 1);
-  plr.footCol = NewCollider(2, 22, 8, 4, 1); 
+  plr.footCol = NewCollider(2, 22, 8, 4, 1); 
   plr.vel.x = 0;
   plr.vel.y = 0;
   plr.acceleration = 1.3;

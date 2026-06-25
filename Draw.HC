@@ -15,16 +15,12 @@ U0 DrawSky(CDC *dc)
 
 U0 DrawColliders(CDC *dc)
 {
-  dc->color = GREEN;
+dc->color=ROPF_DITHER+GREEN<<16+TRANSPARENT;
   Collider *temp = collider_que.next;
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
-    if(temp->type == ENEMY_D_COLLIDER)
-    {
-      return;
-    }
-    GrRect(dc, temp->pos.x - camOffset.x, temp->pos.y - camOffset.y, temp->size.x, temp->size.y);
+    GrRect(dc, temp->pos.x - camOffset.x, temp->pos.y - camOffset.y, temp->size.x, temp->size.y);
     temp = next; 
   }
   dc->color = BLACK;
@@ -100,13 +96,40 @@ U0 DrawParticles(CDC *dc)
     Particle *next = temp->next;
     GrBlot(dc,
     temp->pos.x - camOffset.x,
-    temp->pos.y - camOffset.y,
+    temp->pos.y - camOffset.y,
     temp->curSprite);
     temp = next;
   }
 }
 
 
+U0 DrawTurtles(CDC *dc)
+{
+  Turtle *temp = turtle_que.next;
+  while(temp != &turtle_que)
+  {
+    Turtle *next = temp->next;
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.y - camOffset.y - 12,
+    temp->curSprite);
+    temp = next;
+  }
+}
+
+U0 DrawTShells(CDC *dc)
+{
+  TShell *temp = tshell_que.next;
+  while(temp != &tshell_que)
+  {
+    TShell *next = temp->next;
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x - 5,
+    temp->myCol->pos.y - camOffset.y - 14,
+    temp->curSprite);
+    temp = next;
+  }
+}
 
 
 

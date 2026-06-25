@@ -32,8 +32,10 @@ U0 DrawIt(CTask *task, CDC *dc)
   UpdateCam;
 
   UpdateSlugs;
+  UpdateTShells;
+  UpdateTurtles;
   UpdateParticles;
-
+
   ShootBulletLogic;
   UpdateMousePos;
 
@@ -42,6 +44,8 @@ U0 DrawIt(CTask *task, CDC *dc)
   DrawColliders(dc);
   DrawMap(dc);
   DrawSlugs(dc);  
+  DrawTurtles(dc);
+  DrawTShells(dc);
   UpdatePlayerAnimation;
   DrawPlayer(dc);
   DrawParticles(dc);
