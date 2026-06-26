@@ -134,6 +134,49 @@ U0 UpdatePlrMove()
   plrCol.isColLeft = FALSE;
   plrCol.isColRight = FALSE;
 
+  if(plr.powerUp != 0)
+  {
+    Bool isAboveMe = isAbovePlayer;
+    if(keys.down && plr.grounded)
+    {
+      plr.ducking = TRUE;
+    }
+    else if(!isAboveMe)
+    {
+      plr.ducking = FALSE;
+    }
+  }
+
+  isAboveMe = isAbovePlayer;
+  if(isAboveMe && plr.ducking)
+  {
+    if(keys.left && plr.ducking)
+    {
+      plr.vel.x = -1.5;
+      plr.isLookingRight = FALSE;
+    }
+    if(keys.right && plr.ducking)
+    {
+      plr.vel.x = 1.5;
+      plr.isLookingRight = TRUE;
+    }
+  }
+
+  if(plr.ducking && plr.powerUp != 0)
+  {
+    F64 oldSizeY = plr.myCollider->size.y;
+    plr.myCollider->size.y = 22;
+    F64 newSizeY = plr.myCollider->size.y;
+    plr.myCollider->pos.y -= newSizeY - oldSizeY;
+  }
+  else if(!plr.ducking && plr.powerUp != 0)
+  {
+    oldSizeY = plr.myCollider->size.y;
+    plr.myCollider->size.y = PLR_BIG_SIZE_Y;
+    newSizeY = plr.myCollider->size.y;
+    plr.myCollider->pos.y -= newSizeY - oldSizeY;
+  }
+
   if(keys.shift && !plr.isJumping)
   {
     plr.acceleration = 2.0;
@@ -148,20 +191,27 @@ U0 UpdatePlrMove()
     plr.vel.x /= FRICTION * 1.05;
   }
 
-  if(keys.left)
+  if(keys.left && !plr.ducking)
   {
     plr.vel.x -= plr.acceleration;
     plr.isLookingRight = FALSE;
     plr.isWalking = TRUE;
   }
-  if(keys.right)
+  if(keys.right && !plr.ducking)
   {
     plr.vel.x += plr.acceleration;
     plr.isLookingRight = TRUE;
     plr.isWalking = TRUE;
   }
 
-  plr.vel.x /= FRICTION;
+  if(!plr.ducking)
+  {
+    plr.vel.x /= FRICTION;
+  }
+  else
+  {
+    plr.vel.x *= 0.95; 
+  }
 
   if(Abs(plr.vel.x) < 0.1)
   {
@@ -289,60 +339,143 @@ U0 UpdatePlrMove()
   {
     PlayerDie;
   }
-  
+  plr.headCol->pos.x = plr.myCollider->pos.x;
+  plr.headCol->pos.y = plr.myCollider->pos.y - 5;
   plr.footCol->pos.x = plr.myCollider->pos.x + 2;
   plr.footCol->pos.y = plr.myCollider->size.y + plr.myCollider->pos.y;
+  
 }
 
 CDC *GetPlayerWalkSprite(I8 frameNumber)
 {
-  if(plr.isLookingRight)
+  if(plr.powerUp == 1)
   {
-    switch(frameNumber)
+    if(plr.isLookingRight)
     {
-      case 1: return tex_PMan_Walk1Right; break;
-      case 2: return tex_PMan_Walk2Right; break;
-      case 3: return tex_PMan_Walk3Right; break;
+      if(plr.ducking)
+      {
+	return tex_PMan_Big_DuckRight;
+      }
+      switch(frameNumber)
+      {
+        case 1: return tex_PMan_Big_Walk1Right; break;
+        case 2: return tex_PMan_Big_Walk2Right; break;
+        case 3: return tex_PMan_Big_Walk3Right; break;
+      }
+      return tex_PMan_Big_IdleRight;
     }
-    return tex_PMan_IdleRight;
+    else
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Big_DuckLeft;
+      }
+      switch(frameNumber)
+      {
+        case 1: return tex_PMan_Big_Walk1Left; break;
+        case 2: return tex_PMan_Big_Walk2Left; break;
+        case 3: return tex_PMan_Big_Walk3Left; break;
+      }
+      return tex_PMan_Big_IdleLeft;
+    }
+    return tex_PMan_Big_IdleRight;
   }
   else
   {
-    switch(frameNumber)
+    if(plr.isLookingRight)
     {
-      case 1: return tex_PMan_Walk1Left; break;
-      case 2: return tex_PMan_Walk2Left; break;
-      case 3: return tex_PMan_Walk3Left; break;
+      switch(frameNumber)
+      {
+        case 1: return tex_PMan_Walk1Right; break;
+        case 2: return tex_PMan_Walk2Right; break;
+        case 3: return tex_PMan_Walk3Right; break;
+      }
+      return tex_PMan_IdleRight;
     }
-    return tex_PMan_IdleLeft;
-  }
-  return tex_PMan_IdleRight;
+    else
+    {
+      switch(frameNumber)
+      {
+        case 1: return tex_PMan_Walk1Left; break;
+        case 2: return tex_PMan_Walk2Left; break;
+        case 3: return tex_PMan_Walk3Left; break;
+      }
+      return tex_PMan_IdleLeft;
+    }
+    return tex_PMan_IdleRight;
 
+  }
 }
 
 CDC *GetPlayerIdleSprite()
 {
-  if(plr.isLookingRight)
+  if(plr.powerUp == 1)
   {
-    return tex_PMan_IdleRight;
+    if(plr.isLookingRight)
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Big_DuckRight;
+      }
+      return tex_PMan_Big_IdleRight;
+    }
+    else
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Big_DuckLeft;
+      }
+      return tex_PMan_Big_IdleLeft;
+    }
   }
   else
   {
+    if(plr.isLookingRight)
+    {
+      return tex_PMan_IdleRight;
+    }
+    else
+    {
+      return tex_PMan_IdleLeft;
+    }
     return tex_PMan_IdleLeft;
   }
-  return tex_PMan_IdleLeft;
 }
 
 CDC *GetPlayerJumpSprite()
 {
-  if(plr.isLookingRight)
+  if(plr.powerUp == 1)
   {
-    return tex_PMan_JumpRight;
+    if(plr.isLookingRight)
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Big_DuckRight;
+      }
+      return tex_PMan_Big_JumpRight;
+    }
+    else
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Big_DuckLeft;
+      }
+      return tex_PMan_Big_JumpLeft;
+    }
   }
   else
   {
-    return tex_PMan_JumpLeft;
+    if(plr.isLookingRight)
+    {
+      return tex_PMan_JumpRight;
+    }
+    else
+    {
+      return tex_PMan_JumpLeft;
+    }
+    return tex_PMan_IdleLeft;
   }
+
 }
 
 
@@ -616,7 +749,7 @@ CDC GetSlugSprite(Slug *a)
       case 2: return tex_Slug_Walk2Left; break;
     }
   }
-}
+}
 
 U0 UpdateSlugAnimation(Slug *a)
 {
@@ -748,5 +881,45 @@ U0 UpdateTShells()
     tshell_nxt:
 
     temp = next;
+  }
+}
+
+
+// Sorry for this global variable
+// Amount of cycles of immune flash to become no longer immune
+// Should be 4
+// This was a bad idea, couldnt really set it in globals
+//I8 immuneOver = 0;
+
+U0 UpdatePlayerImmune()
+{
+  if(plr.immuneCycles >= 15)
+  {
+    plr.immune = FALSE;
+    plr.immuneFlash = FALSE;
+    plr.immuneCycles = 0;
+  }
+  if(plr.immune)
+  {
+    plr.immuneTimer--;
+    if(plr.immuneTimer <= 0)
+    {
+      plr.immuneFlash = !plr.immuneFlash;
+      plr.immuneTimer = 5;
+      plr.immuneCycles++;
+    }
+  }
+}
+
+U0 UpdatePauseTimer()
+{
+  if(g_Paused)
+  {
+    plr.pauseTimer--;
+    if(plr.pauseTimer <= 0)
+    {
+      g_Paused = FALSE;
+      plr.pauseTimer = 15;      
+    }
   }
 }

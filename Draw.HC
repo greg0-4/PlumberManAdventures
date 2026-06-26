@@ -66,9 +66,22 @@ U0 DrawMap(CDC *dc)
 
 U0 DrawPlayer(CDC *dc)
 {
+  if(plr.immuneFlash)
+  {
+    return;
+  }
+
+  F64 yOffset = 6;
+
+  F64 yPos = plr.myCollider->pos.y - camOffset.y - 1;
+  if(plr.powerUp != 0 && !plr.ducking)
+  {
+    yPos = yPos - yOffset;
+  }
+
   GrBlot(dc,
   plr.myCollider->pos.x - camOffset.x - 6,
-  plr.myCollider->pos.y - camOffset.y - 1,
+  yPos,
   plr.curSprite);
 }
 
@@ -138,4 +151,3 @@ U0 DrawTShells(CDC *dc)
 
 
 
-

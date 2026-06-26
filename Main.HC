@@ -28,15 +28,18 @@ U0 DrawIt(CTask *task, CDC *dc)
   DCFill(dc, BLACK);
 
   DrawSky(dc);
-  UpdatePlrMove;
-  UpdateBullets;
-  UpdateCam;
-
-  UpdateSlugs;
-  UpdateTShells;
-  UpdateTurtles;
-  UpdateParticles;
-
+  UpdatePauseTimer;
+  UpdatePlayerImmune;
+  if(!g_Paused)
+  {
+    UpdatePlrMove;
+    UpdateBullets;
+    UpdateCam;
+    UpdateSlugs;
+    UpdateTShells;
+    UpdateTurtles;
+    UpdateParticles;
+  }
   ShootBulletLogic;
   UpdateMousePos;
 
@@ -51,7 +54,7 @@ U0 DrawIt(CTask *task, CDC *dc)
   DrawPlayer(dc);
   DrawParticles(dc);
   dc->color = WHITE;
-  GrPrint(dc, 24, 0, "%d",QueCnt(particle_que));
+  GrPrint(dc, 24, 0, "%f",plr.myCollider->size.y);
 }
 
 U0 Main()
@@ -79,6 +82,7 @@ U0 Main()
 	    case 's': case 'S': keys.down = FALSE; break;
 	    case 'a': case 'A': keys.left = FALSE; break;
 	    case 'd': case 'D': keys.right = FALSE; break;
+	    case 'p': PlayerPowerUp; break;
 	    case 0:
 
 	      switch(input2.u8[0])$IV,0$
@@ -130,5 +134,5 @@ U0 Main()
   SettingsPop;
   GrPaletteSet(gr_palette_std);
 }
-
+
 Main;

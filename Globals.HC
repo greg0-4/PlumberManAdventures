@@ -10,8 +10,11 @@
 #define MAP_WIDTH 1
 #define MAP_HEIGHT 20
 
+#define PLR_BIG_SIZE_Y 40
+
 Bool g_Gaming = TRUE;
 
+Bool g_Paused = FALSE;
 
 
 class Vector2
@@ -28,6 +31,7 @@ class Collider : CQue
 
 class Player
 {
+  Collider *headCol;
   Collider *myCollider;
   Collider *footCol;
   CDC *curSprite;
@@ -39,9 +43,19 @@ class Player
   Bool isLookingRight;
   F64 gravity;
   F64 acceleration;
+  I8 powerUp;
   I8 walkFrame;
   I64 walk_frameSpeed;
   I64 walk_frameSpeedReset;
+
+  Bool ducking;
+
+  Bool immune;
+  Bool immuneFlash;
+  I8 immuneTimer;
+  I8 immuneCycles;
+
+  I8 pauseTimer;
 } plr;
 
 class PlayerColStatus
@@ -100,6 +114,11 @@ class TShell : Enemy
 {
   
 } tshell_que;
+
+class Shroom : Enemy
+{
+
+} shroom_que;
 
 class Particle : CQue
 {
@@ -295,7 +314,7 @@ U0 InitMapEntities()
 
 I64 g_MouseX = ms.pos.x;
 I64 g_MouseY = ms.pos.y;
-
+
 U0 LoadMap(U8 *file)
 {
   U8 *buffer = FileRead(file);
@@ -342,6 +361,17 @@ U0 LoadMap(U8 *file)
   current_map.height = height;
 }
 
+U0 PlayerPowerUp()
+{
+  g_Paused = TRUE;
+  plr.immune = TRUE;
+  plr.powerUp = 1;
+  F64 oldSizeY = plr.myCollider->size.y;
+  plr.myCollider->size.y = PLR_BIG_SIZE_Y;
+  F64 newSizeY = plr.myCollider->size.y;
+  plr.myCollider->pos.y -= newSizeY - oldSizeY;
+}
+
 
 U0 Init()
 {
@@ -357,8 +387,10 @@ U0 Init()
   QueInit(&turtle_que);
   QueInit(&tshell_que);
 
+  plr.headCol = NewCollider(0,-4, 12, 4, 1);
   plr.myCollider = NewCollider(0, 0, 12, 22, 1);
   plr.footCol = NewCollider(2, 22, 8, 4, 1); 
+  plr.powerUp = 0;
   plr.vel.x = 0;
   plr.vel.y = 0;
   plr.acceleration = 1.3;
@@ -369,7 +401,11 @@ U0 Init()
   plr.isLookingRight = TRUE;
   plr.grounded = FALSE;
   plr.isJumping = TRUE;
+  // Flashing sprite, not actual immune timer
+  plr.immuneTimer = 0;
+  plr.immune = FALSE;
 
+  plr.pauseTimer = 15;
 
   plrCol.isColBottom = FALSE;
   plrCol.isColTop = FALSE;
@@ -388,6 +424,26 @@ U0 Init()
 
 U0 PlayerDie()
 {
+  if(plr.myCollider->pos.y > 500)
+  {
+    goto cont;
+  }
+  if(plr.immune)
+  {
+    return;
+  }
+  if(plr.powerUp != 0)
+  {
+    plr.immune = TRUE;
+    g_Paused = TRUE;
+    plr.powerUp = 0;
+    F64 oldSizeY = plr.myCollider->size.y;
+    plr.myCollider->size.y = 22;
+    F64 newSizeY = plr.myCollider->size.y;
+    plr.myCollider->pos.y -= newSizeY - oldSizeY;
+    return;
+  }
+  cont:
   QueDel(&collider_que);
   QueDel(&bullet_que);
   QueDel(&slug_que);
