@@ -1,5 +1,6 @@
-
 CDC *tex_Tile = GRRead("Sprites/Tile.GR.Z");
+CDC *tex_Brick = GRRead("Sprites/Brick.GR.Z");
+
 CDC *tex_Cloud = GRRead("Sprites/Cloud.GR.Z");
 CDC *tex_Sun = GRRead("Sprites/Sun.GR.Z");
 
@@ -30,7 +31,7 @@ CDC *tex_PMan_Big_JumpLeft = GRRead("Sprites/PMan/Big/JumpLeft.GR.Z");
 CDC *tex_PMan_Big_JumpRight = GRRead("Sprites/PMan/Big/JumpRight.GR.Z");
 
 CDC *tex_PMan_Big_DuckLeft = GRRead("Sprites/PMan/Big/DuckLeft.GR.Z");
-CDC *tex_PMan_Big_DuckRight = GRRead("Sprites/PMan/Big/DuckRight.GR.Z");
+CDC *tex_PMan_Big_DuckRight = GRRead("Sprites/PMan/Big/DuckRight.GR.Z");
 
 
 CDC *tex_Slug_Walk1Left = GRRead("Sprites/Slug/Walk1Left.GR.Z");
@@ -44,3 +45,8 @@ CDC *tex_Turtle_Walk1Right = GRRead("Sprites/Turtle/Walk1Right.GR.Z");
 CDC *tex_Turtle_Walk2Right = GRRead("Sprites/Turtle/Walk2Right.GR.Z");
 
 CDC *tex_Turtle_Shell = GRRead("Sprites/Turtle/Shell.GR.Z");
+
+CDC *tex_Powerup_Shroom = GRRead("Sprites/PowerUps/Shroom.GR.Z");
+
+CDC *tex_Particle_BrickLeft = GRRead("Sprites/Particles/BrickLeft.GR.Z");
+CDC *tex_Particle_BrickRight = GRRead("Sprites/Particles/BrickRight.GR.Z");

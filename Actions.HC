@@ -1,21 +1,3 @@
-Bool isColliderPlayer(Collider *a)
-{
-  if(a == plr.myCollider)
-  {
-    return TRUE;
-  }
-
-  if(a == plr.headCol)
-  {
-    return TRUE;
-  }
-
-  if(a == plr.footCol)
-  {
-    return TRUE;
-  }
-  return FALSE;
-}
 
 U0 ShootBulletLogic()
 {
@@ -38,23 +20,3 @@ U0 ShootBulletLogic()
 
 }
 
-Bool isAbovePlayer()
-{
-  Collider *temp = collider_que.next;
-  while(temp != &collider_que)
-  {
-    Collider *next = temp->next;
-    Bool amIPlr = isColliderPlayer(temp);
-    if(amIPlr)
-    {
-      goto cont;
-    }
-    if(AABBCollision(plr.headCol, temp))
-    {
-      return TRUE;
-    }
-    cont:
-    temp = next;
-  }
-  return FALSE;
-}

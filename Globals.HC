@@ -3,6 +3,9 @@
 #define BULLET_COLLIDER 3
 #define ENEMY_COLLIDER 4
 #define TSHELL_COLLIDER 5
+#define SHROOM_COLLIDER 6
+#define BREAKABLE_COLLIDER 7
+
 
 #define GRAVITY 1
 #define FRICTION 1.3
@@ -127,6 +130,19 @@ class Particle : CQue
   CDC *curSprite;
 } particle_que;
 
+class Breakable : CQue
+{
+  Collider *myCol;
+  CDC *curSprite;
+  Bool isFalling;
+  I8 offsetY;
+};
+
+class Brick : Breakable
+{
+
+} brick_que;
+
 Collider *NewCollider(F64 x1, F64 y1, F64 x2, F64 y2, F64 type)
 {
   Collider *new = CAlloc(sizeof(Collider));
@@ -220,6 +236,44 @@ U0 DelTShell(TShell *a)
   Free(a);
 }
 
+Shroom *NewShroom(F64 x, F64 y)
+{
+  Shroom *new = CAlloc(sizeof(Shroom));
+  new->myCol = NewCollider(x,y,24,24, SHROOM_COLLIDER);
+  new->Health = 1;
+  new->curSprite = tex_Powerup_Shroom;
+  new->active = FALSE;
+  new->isLookingRight = TRUE;
+  new->speed = 2;
+  QueIns(new, shroom_que);
+  return new;
+} 
+
+U0 DelShroom(Shroom *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
+Brick *NewBrick(F64 x, F64 y)
+{
+  Brick *new = CAlloc(sizeof(Brick));
+  new->myCol = NewCollider(x,y,24,24, BREAKABLE_COLLIDER);
+  new->isFalling = FALSE;
+  new->offsetY = 0;
+  new->curSprite = tex_Brick;
+  QueIns(new, brick_que);
+  return new;
+}
+
+U0 DelBrick(Brick *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
 Bullet *NewBullet(Vector2 *vel, F64 x, F64 y)
 {
   "\n[%f] [%f]",vel->x,vel->y;
@@ -265,28 +319,47 @@ Bool AABBCollision(Collider *a, Collider *b)
   return TRUE;
 }
 
-I64 gameMap[MAP_HEIGHT][20] = {
-  {1,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,1,4,0,0,0,0,4,1,0},
-  {1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0},
-  {1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0},
-  {1,0,0,0,0,0,0,0,0,0,0,0,0,1,0,3,0,1,0,0},
-  {1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1},
-  {1,1,1,1,1,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1}
-};
+Bool isColliderPlayer(Collider *a)
+{
+  if(a == plr.myCollider)
+  {
+    return TRUE;
+  }
+
+  if(a == plr.headCol)
+  {
+    return TRUE;
+  }
+
+  if(a == plr.footCol)
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+
+Bool isAbovePlayer()
+{
+  Collider *temp = collider_que.next;
+  while(temp != &collider_que)
+  {
+    Collider *next = temp->next;
+    Bool amIPlr = isColliderPlayer(temp);
+    if(amIPlr)
+    {
+      goto cont;
+    }
+    if(AABBCollision(plr.headCol, temp))
+    {
+      return TRUE;
+    }
+    cont:
+    temp = next;
+  }
+  return FALSE;
+}
+
 
 Vector2 camOffset;
 
@@ -303,10 +376,12 @@ U0 InitMapEntities()
 	case 1: NewCollider(x*24,y*24,24,24,2); break;
         case 2: 
 	  plr.myCollider->pos.x = x * 24 + 6;
-	  plr.myCollider->pos.y = y * 24 + 6;
+	  plr.myCollider->pos.y = y * 24;
 	break;
-        case 3: NewSlug(x*24,y*24); break;
+        case 3: NewSlug(x*24,y*24 + 12); break;
 	case 4: NewTurtle(x*24,y*24 + 12); break;
+	case 5: NewShroom(x*24,y*24); break;
+	case 6: NewBrick(x*24,y*24); break;
       }
     }
   }
@@ -353,7 +428,6 @@ U0 LoadMap(U8 *file)
     }
   }
 
-
   Free(buffer);
   current_map.mapArray = mapArray;
   current_map.entityArray = entityArray;
@@ -363,15 +437,31 @@ U0 LoadMap(U8 *file)
 
 U0 PlayerPowerUp()
 {
+  if(plr.powerUp != 0)
+  {
+    return;
+  }
   g_Paused = TRUE;
   plr.immune = TRUE;
   plr.powerUp = 1;
+  
+  Bool isAbove = isAbovePlayer;
   F64 oldSizeY = plr.myCollider->size.y;
   plr.myCollider->size.y = PLR_BIG_SIZE_Y;
   F64 newSizeY = plr.myCollider->size.y;
   plr.myCollider->pos.y -= newSizeY - oldSizeY;
+  if(isAbove)
+  {
+    plr.ducking = TRUE;
+  }
+
 }
 
+
+F64 Lerp(F64 a, F64 b, F64 t)
+{
+  return a + t * (b - a);
+}
 
 U0 Init()
 {
@@ -386,8 +476,10 @@ U0 Init()
   QueInit(&slug_que);
   QueInit(&turtle_que);
   QueInit(&tshell_que);
+  QueInit(&shroom_que);
+  QueInit(&brick_que);
 
-  plr.headCol = NewCollider(0,-4, 12, 4, 1);
+  plr.headCol = NewCollider(0,-10, 12, 20, 1);
   plr.myCollider = NewCollider(0, 0, 12, 22, 1);
   plr.footCol = NewCollider(2, 22, 8, 4, 1); 
   plr.powerUp = 0;

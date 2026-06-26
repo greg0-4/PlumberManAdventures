@@ -57,7 +57,8 @@ U0 DrawMap(CDC *dc)
       switch(tile)
       {
 
-	case 1: GrBlot(dc, x * 24 - camOffset.x, y * 24 - camOffset.y, tex_Tile); break;
+	case 1: GrBlot(dc, posX, posY, tex_Tile); break;
+        case 2: GrBlot(dc, posX, posY, tex_Brick); break;
       }
     }
   }
@@ -74,9 +75,14 @@ U0 DrawPlayer(CDC *dc)
   F64 yOffset = 6;
 
   F64 yPos = plr.myCollider->pos.y - camOffset.y - 1;
-  if(plr.powerUp != 0 && !plr.ducking)
+  if(plr.powerUp != 0 && !plr.ducking)
   {
     yPos = yPos - yOffset;
+  }
+
+  if(plr.myCollider->size.y == PLR_BIG_SIZE_Y && plr.ducking)
+  {
+    yPos = plr.myCollider->pos.y + 18;
   }
 
   GrBlot(dc,
@@ -143,6 +149,36 @@ U0 DrawTShells(CDC *dc)
     temp = next;
   }
 }
+
+U0 DrawShrooms(CDC *dc)
+{
+  Shroom *temp = shroom_que.next;
+  while(temp != &shroom_que)
+  {
+    Shroom *next = temp->next;
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.y - camOffset.y,
+    temp->curSprite);
+    temp = next;
+  }
+}
+
+U0 DrawBricks(CDC *dc)
+{
+  Brick *temp = brick_que.next;
+  while(temp != &brick_que)
+  {
+    Brick *next = temp->next;
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.y - camOffset.y - temp->offsetY - 2,
+    temp->curSprite);
+    temp = next;
+  }
+}
+
+
 
 
 

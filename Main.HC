@@ -33,12 +33,15 @@ U0 DrawIt(CTask *task, CDC *dc)
   if(!g_Paused)
   {
     UpdatePlrMove;
+    UpdateBreakables;
     UpdateBullets;
     UpdateCam;
     UpdateSlugs;
     UpdateTShells;
     UpdateTurtles;
+    UpdateShrooms;
     UpdateParticles;
+    
   }
   ShootBulletLogic;
   UpdateMousePos;
@@ -47,14 +50,16 @@ U0 DrawIt(CTask *task, CDC *dc)
   DrawBullets(dc);
   DrawColliders(dc);
   DrawMap(dc);
+  DrawBricks(dc);
   DrawSlugs(dc);  
   DrawTurtles(dc);
   DrawTShells(dc);
+  DrawShrooms(dc);
   UpdatePlayerAnimation;
   DrawPlayer(dc);
   DrawParticles(dc);
   dc->color = WHITE;
-  GrPrint(dc, 24, 0, "%f",plr.myCollider->size.y);
+  GrPrint(dc, 24, 0, "%f",plr.myCollider->size.y);
 }
 
 U0 Main()
@@ -82,8 +87,7 @@ U0 Main()
 	    case 's': case 'S': keys.down = FALSE; break;
 	    case 'a': case 'A': keys.left = FALSE; break;
 	    case 'd': case 'D': keys.right = FALSE; break;
-	    case 'p': PlayerPowerUp; break;
-	    case 0:
+	    case 0:
 
 	      switch(input2.u8[0])$IV,0$
 	      {

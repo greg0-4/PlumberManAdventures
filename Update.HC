@@ -111,6 +111,63 @@ U0 TShellPlrCollision(Collider *a)
   }
 }
 
+U0 ShroomPlrCollision(Collider *a)
+{
+  Shroom *temp = shroom_que.next;
+  while(temp != &shroom_que)
+  {
+    Shroom *next = temp->next;
+    if(temp->myCol != a)
+      goto cont;
+
+    if(AABBCollision(plr.myCollider, temp->myCol))
+    {
+      PlayerPowerUp;
+      DelShroom(temp);
+      return;
+    }
+    cont:
+    temp = next;
+  }
+}
+
+U0 BreakablePlrCollision(Collider *a)
+{
+  Brick *br_temp = brick_que.next;
+  while(br_temp != &brick_que)
+  {
+    Brick *br_next = br_temp->next;
+    if(br_temp->myCol != a)
+    {
+      goto br_cont;
+    }
+
+    br_temp->isFalling = TRUE;
+
+    if(plr.powerUp != 0)
+    {
+      NewParticle(
+      br_temp->myCol->pos.x,
+      br_temp->myCol->pos.y,
+      tex_Particle_BrickLeft,
+      -4,
+      0);
+      
+      NewParticle(
+      br_temp->myCol->pos.x,
+      br_temp->myCol->pos.y,
+      tex_Particle_BrickRight,
+      4,
+      0);
+      DelBrick(br_temp);
+      goto br_cont;
+    }
+
+    br_cont:
+    br_temp = br_next;
+  }
+}
+
 
 U0 UpdateCam()
 {
@@ -229,34 +286,41 @@ U0 UpdatePlrMove()
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
-    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp) && temp->type == 2)
+    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp))
     {
-
-      if(plr.vel.x > 0)
+      if(temp->type == 2 || temp->type == BREAKABLE_COLLIDER)
       {
-        plr.myCollider->pos.x = temp->pos.x - plr.myCollider->size.x;
-        plrCol.isColRight = TRUE;
+        if(plr.vel.x > 0)
+        {
+          plr.myCollider->pos.x = temp->pos.x - plr.myCollider->size.x;
+          plrCol.isColRight = TRUE;
+        }
+        else
+        {
+	  plr.myCollider->pos.x = temp->pos.x + temp->size.x;
+          plrCol.isColLeft = TRUE;
+        }
+        plr.vel.x = 0;
+        plr.isWalking = FALSE;
+      
+        goto colx_continue;
       }
-      else
-      {
-	plr.myCollider->pos.x = temp->pos.x + temp->size.x;
-        plrCol.isColLeft = TRUE;
-      }
-      plr.vel.x = 0;
-      plr.isWalking = FALSE;
-      goto colx_continue;
     }
 
     if(temp != plr.myCollider)
     {
-      if(temp->type == ENEMY_COLLIDER)
+      switch(temp->type)
       {
-        SlugPlrCollision(temp);
-        TurtlePlrCollision(temp);
-      }
-      if(temp->type == TSHELL_COLLIDER)
-      {
-	TShellPlrCollision(temp);
+	case ENEMY_COLLIDER:
+	  SlugPlrCollision(temp);
+	  TurtlePlrCollision(temp);
+	break;
+	case TSHELL_COLLIDER:
+	  TShellPlrCollision(temp);
+	break;
+	case SHROOM_COLLIDER:
+	  ShroomPlrCollision(temp);
+	break;
       }
     }
     colx_continue:
@@ -281,21 +345,29 @@ U0 UpdatePlrMove()
   while(temp != &collider_que)
   {
     next = temp->next;
-    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp) && temp->type == 2)
+    if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp))
     {
-      if(plr.vel.y > 0)
+      if(temp->type == 2 || temp->type == BREAKABLE_COLLIDER)
       {
-        plr.myCollider->pos.y = temp->pos.y - plr.myCollider->size.y;
-	plrCol.isColBottom = TRUE;
-        plr.grounded = TRUE;
+          if(plr.vel.y > 0)
+          {
+            plr.myCollider->pos.y = temp->pos.y - plr.myCollider->size.y;
+	    plrCol.isColBottom = TRUE;
+            plr.grounded = TRUE;
+          }
+          else
+          {
+            plrCol.isColTop = TRUE;
+     	    plr.myCollider->pos.y = temp->pos.y + temp->size.y;
+	    if(temp->type == BREAKABLE_COLLIDER)
+	    {
+	      BreakablePlrCollision(temp);
+            }
+          }
+          plr.vel.y = 0;
+        break;
+      }
 
-      }
-      else
-      {
-        plrCol.isColTop = TRUE;
-   	plr.myCollider->pos.y = temp->pos.y + temp->size.y;
-      }
-      plr.vel.y = 0;
     }
     temp = next;
   }
@@ -340,7 +412,7 @@ U0 UpdatePlrMove()
     PlayerDie;
   }
   plr.headCol->pos.x = plr.myCollider->pos.x;
-  plr.headCol->pos.y = plr.myCollider->pos.y - 5;
+  plr.headCol->pos.y = plr.myCollider->pos.y - 20;
   plr.footCol->pos.x = plr.myCollider->pos.x + 2;
   plr.footCol->pos.y = plr.myCollider->size.y + plr.myCollider->pos.y;
   
@@ -921,5 +993,50 @@ U0 UpdatePauseTimer()
       g_Paused = FALSE;
       plr.pauseTimer = 15;      
     }
+  }
+}
+
+
+U0 UpdateShrooms()
+{
+  Shroom *temp = shroom_que.next;
+  while(temp != &shroom_que)
+  {
+    Shroom *next = temp->next;
+    UpdateEnemy(temp);
+    temp = next;
+  }
+}
+
+U0 UpdateBreakable(Breakable *a)
+{
+  if(!a->isFalling)
+  {
+    a->offsetY = Lerp(a->offsetY, -5.0, 0.3);
+    if(a->offsetY <= -4.0)
+    {
+      a->isFalling = TRUE;
+    }
+  }
+  else
+  {
+    a->offsetY = Lerp(a->offsetY, 0.0, 0.3);
+    if(a->offsetY > -0.1)
+    {
+      a->offsetY = 0;
+      a->isFalling = FALSE;
+    }
+  }
+}
+
+U0 UpdateBreakables()
+{
+  Brick *br_temp = brick_que.next;
+  while(br_temp != &brick_que)
+  {
+    Brick *br_next = br_temp->next;
+    UpdateBreakable(br_temp);
+    br_cont:
+    br_temp = br_next;
   }
 }
