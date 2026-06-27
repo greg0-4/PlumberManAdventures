@@ -301,13 +301,34 @@ U0 DrawCoins(CDC *dc)
       goto cont;
     GrBlot(dc,
     posX,
-    posY,
+    posY,
     temp->curSprite);
     cont:
     temp = next;
   }
 }
 
+U0 DrawFlowers(CDC *dc)
+{
+  Flower *temp = flower_que.next;
+  while(temp != &flower_que)
+  {
+    Flower *next = temp->next;
+    F64 posX = temp->myCol->pos.x - camOffset.x;
+    F64 posY = temp->myCol->pos.y - camOffset.y;
+    if(posX < - 26)
+      goto cont;
+    if(posY > 650)
+      goto cont;
+    GrBlot(dc,
+    posX,
+    posY,
+    temp->curSprite);
+    cont:
+    temp = next;
+     
+  }
+}
 
 
 

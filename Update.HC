@@ -133,6 +133,10 @@ U0 ShroomPlrCollision(Collider *a)
 
 U0 BreakablePlrCollision(Collider *a)
 {
+  if(plr.vel.y < -12)
+  {
+    return;
+  }
   Brick *br_temp = brick_que.next;
   while(br_temp != &brick_que)
   {
@@ -143,6 +147,7 @@ U0 BreakablePlrCollision(Collider *a)
     }
 
     br_temp->isFalling = TRUE;
+    isEnemyAbove(a);
 
     if(plr.powerUp != 0)
     {
@@ -182,6 +187,8 @@ U0 QuestionPlrCollision(Collider *a)
     {
       goto cont;
     }
+
+    isEnemyAbove(a);
     temp->isFalling = TRUE;
     if(!temp->isPowerUp)
     {
@@ -191,6 +198,42 @@ U0 QuestionPlrCollision(Collider *a)
       temp->myCol->pos.x,
       temp->myCol->pos.y,
       tex_Particle_Coin1);
+      goto cont;
+    }
+    temp->amount--;
+    if(plr.powerUp == 0)
+    {
+      NewQuestionPart(
+      temp->myCol->pos.x,
+      temp->myCol->pos.y,
+      tex_Powerup_Shroom,
+      1, 2);
+    }
+    if(plr.powerUp >= 1)
+    {
+      NewQuestionPart(
+      temp->myCol->pos.x,
+      temp->myCol->pos.y,
+      tex_Powerup_Flower1,
+      1, 3);
+    }
+    cont:
+    temp = next;
+  }
+}
+
+U0 FlowerPlrCollision(Collider *a)
+{
+  Flower *temp = flower_que.next;
+  while(temp != &flower_que)
+  {
+    Flower *next = temp->next;
+    if(temp->myCol != a)
+      goto cont;
+    if(AABBCollision(plr.myCollider, temp->myCol))
+    {
+      DelFlower(temp);
+      PlayerPowerUp(FALSE);
       goto cont;
     }
     cont:
@@ -372,6 +415,9 @@ U0 UpdatePlrMove()
         case COIN_COLLIDER:
           CoinPlrCollision(temp);
 	break;
+	case FLOWER_COLLIDER:
+	  FlowerPlrCollision(temp);
+	break;
       }
     }
     colx_continue:
@@ -380,7 +426,7 @@ U0 UpdatePlrMove()
   plr.vel.y += plr.gravity;
 
   if(Abs(plr.vel.y) < 0.1)
-  {
+  {
     plr.vel.y = 0;
   }
 
@@ -507,6 +553,38 @@ CDC *GetPlayerWalkSprite(I8 frameNumber)
     }
     return tex_PMan_Big_IdleRight;
   }
+  else if(plr.powerUp == 2)
+  {
+    if(plr.isLookingRight)
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Flower_DuckRight;
+      }
+      switch(frameNumber)
+      {
+        case 1: return tex_PMan_Flower_Walk1Right; break;
+        case 2: return tex_PMan_Flower_Walk2Right; break;
+        case 3: return tex_PMan_Flower_Walk3Right; break;
+      }
+      return tex_PMan_Flower_IdleRight;
+    }
+    else
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Flower_DuckLeft;
+      }
+      switch(frameNumber)
+      {
+        case 1: return tex_PMan_Flower_Walk1Left; break;
+        case 2: return tex_PMan_Flower_Walk2Left; break;
+        case 3: return tex_PMan_Flower_Walk3Left; break;
+      }
+      return tex_PMan_Flower_IdleLeft;
+    }
+    return tex_PMan_Flower_IdleRight;
+  }
   else
   {
     if(plr.isLookingRight)
@@ -555,6 +633,26 @@ CDC *GetPlayerIdleSprite()
       return tex_PMan_Big_IdleLeft;
     }
   }
+  else if(plr.powerUp == 2)
+  {
+    if(plr.isLookingRight)
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Flower_DuckRight;
+      }
+      return tex_PMan_Flower_IdleRight;
+    }
+    else
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Flower_DuckLeft;
+      }
+      return tex_PMan_Flower_IdleLeft;
+    }
+   
+  }
   else
   {
     if(plr.isLookingRight)
@@ -588,6 +686,25 @@ CDC *GetPlayerJumpSprite()
 	return tex_PMan_Big_DuckLeft;
       }
       return tex_PMan_Big_JumpLeft;
+    }
+  }
+  else if(plr.powerUp == 2)
+  {
+    if(plr.isLookingRight)
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Flower_DuckRight;
+      }
+      return tex_PMan_Flower_JumpRight;
+    }
+    else
+    {
+      if(plr.ducking)
+      {
+	return tex_PMan_Flower_DuckLeft;
+      }
+      return tex_PMan_Flower_JumpLeft;
     }
   }
   else
@@ -706,7 +823,8 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
   while(temp != &collider_que)
   {
     Collider *next = temp->next;
-    if(temp == plr.myCollider || temp == plr.footCol)
+    Bool isPlr = isColliderPlayer(temp);
+    if(isPlr)
     {
       goto enemy_continue;
     }
@@ -726,16 +844,15 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
     }
  
 
-    if(temp->type != WALL_COLLIDER)
-    {
-      goto enemy_continue;
-    }
-
-
     enemy_shell_cont:
 
     if(AABBCollision(a->myCol, temp))
     {
+
+      if(a->myCol->type == SHROOM_COLLIDER && temp->type == SHROOM_COLLIDER)
+      {
+        goto enemy_continue;
+      }
 
       if(a->myCol->type == ENEMY_COLLIDER && temp->type == ENEMY_COLLIDER)
       {
@@ -751,7 +868,7 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
 	   if(e_temp->myCol == temp)
 	   {
 	     e_temp->Health = 0;
-	     return;
+	     goto enemy_continue;
 	   }
 	   e_temp = e_next;
 	}
@@ -762,11 +879,10 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
 	   if(e_temp->myCol == temp)
 	   {
 	     e_temp->Health = 0;
-	     return;
+	     goto enemy_continue;
 	   }
 	   e_temp = e_next;
 	}
-	return;
       }
 
       if(a->myCol->type == ENEMY_COLLIDER && temp->type == TSHELL_COLLIDER)
@@ -1195,7 +1311,28 @@ U0 UpdateQuestionPart(QuestionPart *a)
     {
       DelQuestionPart(a);
     }
-
+    return;
+  }
+  // Shroom
+  if(a->type == 2)
+  {
+    a->offsetY += 1;
+    if(a->offsetY > 25)
+    {
+      NewShroom(a->pos.x, a->pos.y - 25);
+      DelQuestionPart(a);
+      return;
+    }
+  }
+  if(a->type == 3)
+  {
+    a->offsetY += 1;
+    if(a->offsetY > 25)
+    {
+      NewFlower(a->pos.x, a->pos.y - 25);
+      DelQuestionPart(a);
+      return;
+    }
   }
 }
 
@@ -1241,6 +1378,40 @@ U0 UpdateCoins()
     temp = next;
   }
 }
+
+U0 UpdateFlower(Flower *a)
+{
+  a->glowingTimer--;
+
+  if(a->glowing)
+  {
+    a->curSprite = tex_Powerup_Flower1;
+  }
+  else
+  {
+    a->curSprite = tex_Powerup_Flower2;
+  }
+
+  if(a->glowingTimer <= 0)
+  {
+    a->glowingTimer = 5;
+    a->glowing = !a->glowing;
+  }
+
+}
+
+
+U0 UpdateFlowers()
+{
+  Flower *temp = flower_que.next;
+  while(temp != &flower_que)
+  {
+    Flower *next = temp->next;
+    UpdateFlower(temp);
+    temp = next; 
+  }
+}
+
 
 
 

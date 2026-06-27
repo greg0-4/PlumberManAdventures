@@ -7,6 +7,7 @@
 #define BREAKABLE_COLLIDER 7
 #define QUESTION_COLLIDER 8
 #define COIN_COLLIDER 9
+#define FLOWER_COLLIDER 10
 
 
 #define GRAVITY 1
@@ -177,8 +178,12 @@ class Coin : CQue
   Collider *myCol;
   CDC *curSprite;
   Bool glowing;
-  I8 glowingTimer;
+  I8 glowingTimer;
 } coin_que; 
+
+class Flower : Coin
+{
+} flower_que;
 
 QuestionPart *NewQuestionPart(F64 x, F64 y, CDC *sprite, I64 timerReset = 1, I8 type = 1)
 {
@@ -272,6 +277,7 @@ U0 DelTurtle(Turtle *a)
   Free(a);
 }
 
+
 TShell *NewTShell(F64 x, F64 y, Bool isLookingRight)
 {
   TShell *new = CAlloc(sizeof(TShell));
@@ -333,7 +339,7 @@ U0 DelBrick(Brick *a)
   Free(a);
 }
 
-QuestionBlock *NewQuestion(F64 x, F64 y, I64 amount = 1, Bool hidden = FALSE)
+QuestionBlock *NewQuestion(F64 x, F64 y, I64 amount = 1, Bool hidden = FALSE, Bool powerUp = FALSE)
 {
   QuestionBlock *new = CAlloc(sizeof(QuestionBlock));
   new->myCol = NewCollider(x, y, 24, 24, QUESTION_COLLIDER);
@@ -341,6 +347,7 @@ QuestionBlock *NewQuestion(F64 x, F64 y, I64 amount = 1, Bool hidden = FALSE)
   new->offsetY = 0;
   new->amount = amount;
   new->hidden = hidden;
+  new->isPowerUp = powerUp;
   new->curSprite = tex_Question1;
   QueIns(new, question_que);
   return new;
@@ -393,6 +400,7 @@ Coin *NewCoin(F64 x, F64 y)
 {
   Coin *new = CAlloc(sizeof(Coin));
   new->myCol = NewCollider(x,y,24,24,COIN_COLLIDER);
+  new->curSprite = tex_Coin1;
   QueIns(new, coin_que.last);
   return new;
 }
@@ -403,6 +411,29 @@ U0 DelCoin(Coin *a)
   QueRem(a);
   Free(a);
 }
+
+Flower *NewFlower(F64 x, F64 y)
+{
+  Flower *new = CAlloc(sizeof(Flower));
+  new->myCol = NewCollider(x,y,24,24,FLOWER_COLLIDER);
+  new->curSprite = tex_Powerup_Flower1;
+  QueIns(new, flower_que.last);
+  return new;
+}
+
+U0 DelFlower(Flower *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
+U0 KillTurtle(Turtle *a)
+{
+  NewParticle(a->myCol->pos.x, a->myCol->pos.y, tex_Turtle_Shell);
+  DelTurtle(a); 
+}
+
 
 Bool AABBCollision(Collider *a, Collider *b)
 {
@@ -478,7 +509,7 @@ U0 InitMapEntities()
 	case 6: NewBrick(x*24,y*24); break;
 	case 7: NewQuestion(x*24, y*24); break;
 	case 8: NewQuestion(x*24, y*24, 10, TRUE); break;
-
+	case 9: NewQuestion(x*24, y*24,,,TRUE); break;
 	case 10: NewCoin(x*24, y*24); break;
       }
     }
@@ -533,12 +564,24 @@ U0 LoadMap(U8 *file)
   current_map.height = height;
 }
 
-U0 PlayerPowerUp()
+
+U0 PlayerPowerUp(Bool shroom = TRUE)
 {
-  if(plr.powerUp != 0)
+  if(plr.powerUp == 1 && shroom)
+    return;
+
+  if(plr.powerUp == 1)
+  {
+    g_Paused = TRUE;
+    plr.immune = TRUE;
+    plr.powerUp = 2;    
+  }
+
+  if(plr.powerUp == 2)
   {
     return;
   }
+
   g_Paused = TRUE;
   plr.immune = TRUE;
   plr.powerUp = 1;
@@ -579,6 +622,7 @@ U0 Init()
   QueInit(&question_que);
   QueInit(&questionpart_que);
   QueInit(&coin_que);
+  QueInit(&flower_que);
 
   plr.headCol = NewCollider(0,-10, 12, 20, 1);
   plr.myCollider = NewCollider(0, 0, 12, 22, 1);
@@ -597,6 +641,7 @@ U0 Init()
   // Flashing sprite, not actual immune timer
   plr.immuneTimer = 0;
   plr.immune = FALSE;
+  plr.powerUp = 0;
 
   plr.pauseTimer = 15;
 

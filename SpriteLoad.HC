@@ -2,7 +2,8 @@ CDC *tex_Tile = GRRead("Sprites/Tile.GR.Z");
 CDC *tex_Brick = GRRead("Sprites/Brick.GR.Z");
 CDC *tex_Coin1 = GRRead("Sprites/Coin/Coin1.GR.Z");
 CDC *tex_Coin2 = GRRead("Sprites/Coin/Coin2.GR.Z");
-
+
+
 CDC *tex_Question1 = GRRead("Sprites/Tiles/Question1.GR.Z");
 CDC *tex_Question2 = GRRead("Sprites/Tiles/Question2.GR.Z");
 CDC *tex_Question3 = GRRead("Sprites/Tiles/Question3.GR.Z");
@@ -41,6 +42,24 @@ CDC *tex_PMan_Big_DuckLeft = GRRead("Sprites/PMan/Big/DuckLeft.GR.Z");
 CDC *tex_PMan_Big_DuckRight = GRRead("Sprites/PMan/Big/DuckRight.GR.Z");
 
 
+
+CDC *tex_PMan_Flower_IdleRight = GRRead("Sprites/PMan/Big/Flower/IdleRight.GR.Z");
+CDC *tex_PMan_Flower_Walk1Right = GRRead("Sprites/PMan/Big/Flower/Walk1Right.GR.Z");
+CDC *tex_PMan_Flower_Walk2Right = GRRead("Sprites/PMan/Big/Flower/Walk2Right.GR.Z");
+CDC *tex_PMan_Flower_Walk3Right = GRRead("Sprites/Pman/Big/Flower/Walk3Right.GR.Z");
+
+CDC *tex_PMan_Flower_JumpRight = GRRead("Sprites/PMan/Big/Flower/JumpRight.GR.Z");
+CDC *tex_PMan_Flower_DuckRight = GRRead("Sprites/PMan/Big/Flower/DuckRight.GR.Z");
+
+CDC *tex_PMan_Flower_IdleLeft = GRRead("Sprites/PMan/Big/Flower/IdleLeft.GR.Z");
+CDC *tex_PMan_Flower_Walk1Left = GRRead("Sprites/PMan/Big/Flower/Walk1Left.GR.Z");
+CDC *tex_PMan_Flower_Walk2Left = GRRead("Sprites/PMan/Big/Flower/Walk2Left.GR.Z");
+CDC *tex_PMan_Flower_Walk3Left = GRRead("Sprites/Pman/Big/Flower/Walk3Left.GR.Z");
+
+CDC *tex_PMan_Flower_JumpLeft = GRRead("Sprites/PMan/Big/Flower/JumpLeft.GR.Z");
+CDC *tex_PMan_Flower_DuckLeft = GRRead("Sprites/PMan/Big/Flower/DuckLeft.GR.Z");
+
+
 CDC *tex_Slug_Walk1Left = GRRead("Sprites/Slug/Walk1Left.GR.Z");
 CDC *tex_Slug_Walk2Left = GRRead("Sprites/Slug/Walk2Left.GR.Z");
 CDC *tex_Slug_Walk1Right = GRRead("Sprites/Slug/Walk1Right.GR.Z");
@@ -54,6 +73,10 @@ CDC *tex_Turtle_Walk2Right = GRRead("Sprites/Turtle/Walk2Right.GR.Z");
 CDC *tex_Turtle_Shell = GRRead("Sprites/Turtle/Shell.GR.Z");
 
 CDC *tex_Powerup_Shroom = GRRead("Sprites/PowerUps/Shroom.GR.Z");
+CDC *tex_Powerup_Flower1 = GRRead("Sprites/Flower/Flower1.GR.Z");
+CDC *tex_Powerup_Flower2 = GRRead("Sprites/Flower/Flower2.GR.Z");
+
+
 
 CDC *tex_Particle_BrickLeft = GRRead("Sprites/Particles/BrickLeft.GR.Z");
 CDC *tex_Particle_BrickRight = GRRead("Sprites/Particles/BrickRight.GR.Z");
