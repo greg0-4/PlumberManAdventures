@@ -5,6 +5,7 @@
 #define TSHELL_COLLIDER 5
 #define SHROOM_COLLIDER 6
 #define BREAKABLE_COLLIDER 7
+#define QUESTION_COLLIDER 8
 
 
 #define GRAVITY 1
@@ -59,6 +60,8 @@ class Player
   I8 immuneCycles;
 
   I8 pauseTimer;
+
+  I64 coins;
 } plr;
 
 class PlayerColStatus
@@ -142,6 +145,53 @@ class Brick : Breakable
 {
 
 } brick_que;
+
+class QuestionBlock : CQue
+{
+  Collider *myCol;
+  I64 amount;
+  Bool isPowerUp;
+  CDC *curSprite;
+  Bool isFalling;
+  I8 offsetY;
+  I8 glowTimer;
+  Bool glowing;
+
+} question_que;
+
+class QuestionPart : CQue
+{
+  Vector2 pos;
+  CDC *curSprite;
+  I64 curFrame;
+  I64 frameTimer;
+  I64 timerReset;
+  I64 offsetY;
+  I8 type;
+  Bool isFalling;
+} questionpart_que;
+
+QuestionPart *NewQuestionPart(F64 x, F64 y, CDC *sprite, I64 timerReset = 1, I8 type = 1)
+{
+  QuestionPart *new = CAlloc(sizeof(QuestionPart));
+  new->pos.x = x;
+  new->pos.y = y;
+  new->timerReset = timerReset;
+  new->curFrame = 1;
+  new->frameTimer = 0;
+  new->curSprite = sprite;
+  new->offsetY = 0;
+  new->type = type;
+  new->isFalling = FALSE;
+  QueIns(new, questionpart_que);
+  return new;
+}
+
+U0 DelQuestionPart(QuestionPart *a)
+{
+  QueRem(a);
+  Free(a);
+}
 
 Collider *NewCollider(F64 x1, F64 y1, F64 x2, F64 y2, F64 type)
 {
@@ -274,6 +324,25 @@ U0 DelBrick(Brick *a)
   Free(a);
 }
 
+QuestionBlock *NewQuestion(F64 x, F64 y, I64 amount = 1)
+{
+  QuestionBlock *new = CAlloc(sizeof(QuestionBlock));
+  new->myCol = NewCollider(x, y, 24, 24, QUESTION_COLLIDER);
+  new->isFalling = FALSE;
+  new->offsetY = 0;
+  new->amount = amount;
+  new->curSprite = tex_Question1;
+  QueIns(new, question_que);
+  return new;
+}
+
+U0 DelQuestion(QuestionBlock *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
 Bullet *NewBullet(Vector2 *vel, F64 x, F64 y)
 {
   "\n[%f] [%f]",vel->x,vel->y;
@@ -381,7 +450,8 @@ U0 InitMapEntities()
         case 3: NewSlug(x*24,y*24 + 12); break;
 	case 4: NewTurtle(x*24,y*24 + 12); break;
 	case 5: NewShroom(x*24,y*24); break;
-	case 6: NewBrick(x*24,y*24); break;
+	case 6: NewBrick(x*24,y*24); break;
+	case 7: NewQuestion(x*24, y*24); break;
       }
     }
   }
@@ -478,6 +548,8 @@ U0 Init()
   QueInit(&tshell_que);
   QueInit(&shroom_que);
   QueInit(&brick_que);
+  QueInit(&question_que);
+  QueInit(&questionpart_que);
 
   plr.headCol = NewCollider(0,-10, 12, 20, 1);
   plr.myCollider = NewCollider(0, 0, 12, 22, 1);

@@ -34,6 +34,8 @@ U0 DrawIt(CTask *task, CDC *dc)
   {
     UpdatePlrMove;
     UpdateBreakables;
+    UpdateQuestions;
+    UpdateQuestionParts;
     UpdateBullets;
     UpdateCam;
     UpdateSlugs;
@@ -51,15 +53,27 @@ U0 DrawIt(CTask *task, CDC *dc)
   DrawColliders(dc);
   DrawMap(dc);
   DrawBricks(dc);
+  DrawQuestions(dc);
   DrawSlugs(dc);  
   DrawTurtles(dc);
   DrawTShells(dc);
   DrawShrooms(dc);
   UpdatePlayerAnimation;
+  DrawQuestionParts(dc);
   DrawPlayer(dc);
   DrawParticles(dc);
   dc->color = WHITE;
-  GrPrint(dc, 24, 0, "%f",plr.myCollider->size.y);
+  GrPrint(dc,76, 24, "PlumberMan");
+  GrPrint(dc,76, 34, "000000");
+
+  GrPrint(dc, 200, 34, "Coins: %d",plr.coins);
+
+  GrPrint(dc, 376, 24, "World");
+  GrPrint(dc, 376, 34, "1-1");
+
+  GrPrint(dc, 520, 24, "Time");
+  GrPrint(dc, 520, 34, "300");
+  
 }
 
 U0 Main()
@@ -87,7 +101,7 @@ U0 Main()
 	    case 's': case 'S': keys.down = FALSE; break;
 	    case 'a': case 'A': keys.left = FALSE; break;
 	    case 'd': case 'D': keys.right = FALSE; break;
-	    case 0:
+	    case 0:
 
 	      switch(input2.u8[0])$IV,0$
 	      {

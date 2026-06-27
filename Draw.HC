@@ -54,6 +54,10 @@ U0 DrawMap(CDC *dc)
       {
         break;
       }
+      if(posX > 650)
+      {
+	break;
+      }
       switch(tile)
       {
 
@@ -97,10 +101,21 @@ U0 DrawSlugs(CDC *dc)
   while(temp != &slug_que)
   {
     Slug *next = temp->next;
+    I64 posX = (temp->myCol->pos.x) - camOffset.x;
+    I64 posY = (temp->myCol->pos.y) - camOffset.y;
+    if(posX < -26)
+    {
+      goto cont;
+    }
+    if(posX > 650)
+    {
+      goto cont;
+    }
     GrBlot(dc,
     temp->myCol->pos.x - camOffset.x,
     temp->myCol->pos.y - 12 -  camOffset.y,
     temp->curSprite);
+    cont:
     temp = next;
     
   }
@@ -128,10 +143,21 @@ U0 DrawTurtles(CDC *dc)
   while(temp != &turtle_que)
   {
     Turtle *next = temp->next;
+    I64 posX = (temp->myCol->pos.x) - camOffset.x;
+    I64 posY = (temp->myCol->pos.y) - camOffset.y;
+    if(posX < -26)
+    {
+      goto cont;
+    }
+    if(posX > 650)
+    {
+      goto cont;
+    }
     GrBlot(dc,
     temp->myCol->pos.x - camOffset.x,
     temp->myCol->pos.y - camOffset.y - 12,
     temp->curSprite);
+    cont:
     temp = next;
   }
 }
@@ -142,10 +168,21 @@ U0 DrawTShells(CDC *dc)
   while(temp != &tshell_que)
   {
     TShell *next = temp->next;
+    I64 posX = (temp->myCol->pos.x) - camOffset.x;
+    I64 posY = (temp->myCol->pos.y) - camOffset.y;
+    if(posX < -26)
+    {
+      goto cont;
+    }
+    if(posX > 650)
+    {
+      goto cont;
+    }
     GrBlot(dc,
     temp->myCol->pos.x - camOffset.x - 5,
     temp->myCol->pos.y - camOffset.y - 14,
     temp->curSprite);
+    cont:
     temp = next;
   }
 }
@@ -156,10 +193,21 @@ U0 DrawShrooms(CDC *dc)
   while(temp != &shroom_que)
   {
     Shroom *next = temp->next;
+    I64 posX = (temp->myCol->pos.x) - camOffset.x;
+    I64 posY = (temp->myCol->pos.y) - camOffset.y;
+    if(posX < -26)
+    {
+      goto cont;
+    }
+    if(posX > 650)
+    {
+      goto cont;
+    }
     GrBlot(dc,
     temp->myCol->pos.x - camOffset.x,
     temp->myCol->pos.y - camOffset.y,
     temp->curSprite);
+    cont:
     temp = next;
   }
 }
@@ -170,13 +218,78 @@ U0 DrawBricks(CDC *dc)
   while(temp != &brick_que)
   {
     Brick *next = temp->next;
+    I64 posX = (temp->myCol->pos.x) - camOffset.x;
+    I64 posY = (temp->myCol->pos.y) - camOffset.y;
+    if(posX < -26)
+    {
+      goto cont;
+    }
+    if(posX > 650)
+    {
+      goto cont;
+    }
     GrBlot(dc,
-    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.x - camOffset.x,
     temp->myCol->pos.y - camOffset.y - temp->offsetY - 2,
     temp->curSprite);
+    cont:
     temp = next;
   }
 }
+
+U0 DrawQuestions(CDC *dc)
+{
+  QuestionBlock *temp = question_que.next;
+  while(temp != &question_que)
+  {
+    QuestionBlock *next = temp->next;
+    I64 posX = (temp->myCol->pos.x) - camOffset.x;
+    I64 posY = (temp->myCol->pos.y) - camOffset.y;
+    if(posX < -26)
+    {
+      goto cont;
+    }
+    if(posX > 650)
+    {
+      goto cont;
+    }
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.y - camOffset.y - temp->offsetY - 2,
+    temp->curSprite); 
+    cont:
+    temp = next;
+  }
+}
+
+U0 DrawQuestionParts(CDC *dc)
+{
+  QuestionPart *temp = questionpart_que.next;
+  while(temp != &questionpart_que)
+  {
+    QuestionPart *next = temp->next;
+    I64 posX = (temp->pos.x) - camOffset.x;
+    I64 posY = (temp->pos.y) - camOffset.y;
+    if(posX < -26)
+    {
+      goto cont;
+    }
+    if(posX > 650)
+    {
+      goto cont;
+    }
+    GrBlot(dc,
+    posX,
+    posY - temp->offsetY,
+    temp->curSprite);
+    cont:
+    temp = next;
+  }
+}
+
+
+
+
 
 
 

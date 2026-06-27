@@ -1,5 +1,9 @@
 CDC *tex_Tile = GRRead("Sprites/Tile.GR.Z");
 CDC *tex_Brick = GRRead("Sprites/Brick.GR.Z");
+CDC *tex_Question1 = GRRead("Sprites/Tiles/Question1.GR.Z");
+CDC *tex_Question2 = GRRead("Sprites/Tiles/Question2.GR.Z");
+CDC *tex_Question3 = GRRead("Sprites/Tiles/Question3.GR.Z");
+
 
 CDC *tex_Cloud = GRRead("Sprites/Cloud.GR.Z");
 CDC *tex_Sun = GRRead("Sprites/Sun.GR.Z");
@@ -49,4 +53,8 @@ CDC *tex_Turtle_Shell = GRRead("Sprites/Turtle/Shell.GR.Z");
 CDC *tex_Powerup_Shroom = GRRead("Sprites/PowerUps/Shroom.GR.Z");
 
 CDC *tex_Particle_BrickLeft = GRRead("Sprites/Particles/BrickLeft.GR.Z");
-CDC *tex_Particle_BrickRight = GRRead("Sprites/Particles/BrickRight.GR.Z");
+CDC *tex_Particle_BrickRight = GRRead("Sprites/Particles/BrickRight.GR.Z");
+
+CDC *tex_Particle_Coin1 = GRRead("Sprites/Particles/Coin1.GR.Z");
+CDC *tex_Particle_Coin2 = GRRead("Sprites/Particles/Coin2.GR.Z");
+CDC *tex_Particle_Coin3 = GRRead("Sprites/Particles/Coin3.GR.Z");

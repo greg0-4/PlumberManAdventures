@@ -168,6 +168,35 @@ U0 BreakablePlrCollision(Collider *a)
   }
 }
 
+U0 QuestionPlrCollision(Collider *a)
+{
+  QuestionBlock *temp = question_que.next;
+  while(temp != &question_que)
+  {
+    QuestionBlock *next = temp->next;
+    if(temp->myCol != a)
+    {
+      goto cont;
+    }
+    if(temp->amount <= 0)
+    {
+      goto cont;
+    }
+    temp->isFalling = TRUE;
+    if(!temp->isPowerUp)
+    {
+      plr.coins++;
+      temp->amount--;
+      NewQuestionPart(
+      temp->myCol->pos.x,
+      temp->myCol->pos.y,
+      tex_Particle_Coin1);
+      goto cont;
+    }
+    cont:
+    temp = next;
+  }
+}
 
 U0 UpdateCam()
 {
@@ -288,7 +317,7 @@ U0 UpdatePlrMove()
     Collider *next = temp->next;
     if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp))
     {
-      if(temp->type == 2 || temp->type == BREAKABLE_COLLIDER)
+      if(temp->type == 2 || temp->type == BREAKABLE_COLLIDER || temp->type == QUESTION_COLLIDER)
       {
         if(plr.vel.x > 0)
         {
@@ -347,7 +376,7 @@ U0 UpdatePlrMove()
     next = temp->next;
     if(temp != plr.myCollider && AABBCollision(plr.myCollider, temp))
     {
-      if(temp->type == 2 || temp->type == BREAKABLE_COLLIDER)
+      if(temp->type == 2 || temp->type == BREAKABLE_COLLIDER || temp->type == QUESTION_COLLIDER)
       {
           if(plr.vel.y > 0)
           {
@@ -359,6 +388,10 @@ U0 UpdatePlrMove()
           {
             plrCol.isColTop = TRUE;
      	    plr.myCollider->pos.y = temp->pos.y + temp->size.y;
+            if(temp->type == QUESTION_COLLIDER)
+            {
+	      QuestionPlrCollision(temp);
+            }
 	    if(temp->type == BREAKABLE_COLLIDER)
 	    {
 	      BreakablePlrCollision(temp);
@@ -1020,7 +1053,7 @@ U0 UpdateBreakable(Breakable *a)
   }
   else
   {
-    a->offsetY = Lerp(a->offsetY, 0.0, 0.3);
+    a->offsetY = Lerp(a->offsetY, 0.0, 0.3);
     if(a->offsetY > -0.1)
     {
       a->offsetY = 0;
@@ -1040,3 +1073,123 @@ U0 UpdateBreakables()
     br_temp = br_next;
   }
 }
+
+
+U0 UpdateQuestion(QuestionBlock *a)
+{
+  if(a->amount != 0)
+  {
+    a->glowTimer--;
+    if(a->glowing)
+    {
+      a->curSprite = tex_Question1;
+    }
+    else
+    {
+      a->curSprite = tex_Question2;
+    }
+    if(a->glowTimer <= 0)
+    {
+      a->glowing = !a->glowing;
+      a->glowTimer = 8;
+    }
+  }
+
+  if(a->amount <= 0)
+  {
+    a->amount = 0;
+    a->curSprite = tex_Question3;
+  }
+
+  if(!a->isFalling)
+  {
+    a->offsetY = Lerp(a->offsetY, -5.0, 0.3);
+    if(a->offsetY <= -4.0)
+    {
+      a->isFalling = TRUE;
+    }
+  }
+  else
+  {
+    a->offsetY = Lerp(a->offsetY, 0.0, 0.3);
+    if(a->offsetY > -0.1)
+    {
+      a->offsetY = 0;
+      a->isFalling = FALSE;
+    }
+  }
+}
+
+U0 UpdateQuestions()
+{
+  QuestionBlock *temp = question_que.next;
+  while(temp != &question_que)
+  {
+    QuestionBlock *next = temp->next;
+    UpdateQuestion(temp);
+    temp = next;
+  }
+}
+
+U0 UpdateQuestionPart(QuestionPart *a)
+{
+
+  // Coin
+  if(a->type == 1)
+  {
+    
+    a->frameTimer--;
+
+    if(a->curFrame > 3)
+    {
+      a->curFrame = 1;
+    }
+
+    switch(a->curFrame)
+    {
+      default: a->curSprite = tex_Particle_Coin1; break;
+      case 1: a->curSprite = tex_Particle_Coin1; break;
+      case 2: a->curSprite = tex_Particle_Coin2; break;
+      case 3: a->curSprite = tex_Particle_Coin3; break;      
+    }
+
+    if(a->frameTimer <= 0)
+    {
+      a->frameTimer = a->timerReset;
+      a->curFrame++;
+    }
+
+    if(!a->isFalling)
+    {
+      a->offsetY += 10;
+    }
+    if(a->offsetY > 60)
+    {
+      DelQuestionPart(a);
+    }
+
+  }
+}
+
+U0 UpdateQuestionParts()
+{
+  QuestionPart *temp = questionpart_que.next;
+  while(temp != &questionpart_que)
+  {
+    QuestionPart *next = temp->next;
+    UpdateQuestionPart(temp);
+    temp = next;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
