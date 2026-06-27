@@ -42,6 +42,7 @@ U0 DrawIt(CTask *task, CDC *dc)
     UpdateTShells;
     UpdateTurtles;
     UpdateShrooms;
+    UpdateCoins;
     UpdateParticles;
     
   }
@@ -59,7 +60,8 @@ U0 DrawIt(CTask *task, CDC *dc)
   DrawTShells(dc);
   DrawShrooms(dc);
   UpdatePlayerAnimation;
-  DrawQuestionParts(dc);
+  DrawQuestionParts(dc);
+  DrawCoins(dc);
   DrawPlayer(dc);
   DrawParticles(dc);
   dc->color = WHITE;

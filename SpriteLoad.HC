@@ -1,5 +1,8 @@
 CDC *tex_Tile = GRRead("Sprites/Tile.GR.Z");
 CDC *tex_Brick = GRRead("Sprites/Brick.GR.Z");
+CDC *tex_Coin1 = GRRead("Sprites/Coin/Coin1.GR.Z");
+CDC *tex_Coin2 = GRRead("Sprites/Coin/Coin2.GR.Z");
+
 CDC *tex_Question1 = GRRead("Sprites/Tiles/Question1.GR.Z");
 CDC *tex_Question2 = GRRead("Sprites/Tiles/Question2.GR.Z");
 CDC *tex_Question3 = GRRead("Sprites/Tiles/Question3.GR.Z");
@@ -57,4 +60,4 @@ CDC *tex_Particle_BrickRight = GRRead("Sprites/Particles/BrickRight.GR.Z");
 
 CDC *tex_Particle_Coin1 = GRRead("Sprites/Particles/Coin1.GR.Z");
 CDC *tex_Particle_Coin2 = GRRead("Sprites/Particles/Coin2.GR.Z");
-CDC *tex_Particle_Coin3 = GRRead("Sprites/Particles/Coin3.GR.Z");
+CDC *tex_Particle_Coin3 = GRRead("Sprites/Particles/Coin3.GR.Z");

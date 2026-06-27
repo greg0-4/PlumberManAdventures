@@ -6,6 +6,7 @@
 #define SHROOM_COLLIDER 6
 #define BREAKABLE_COLLIDER 7
 #define QUESTION_COLLIDER 8
+#define COIN_COLLIDER 9
 
 
 #define GRAVITY 1
@@ -156,7 +157,7 @@ class QuestionBlock : CQue
   I8 offsetY;
   I8 glowTimer;
   Bool glowing;
-
+  Bool hidden;
 } question_que;
 
 class QuestionPart : CQue
@@ -171,7 +172,15 @@ class QuestionPart : CQue
   Bool isFalling;
 } questionpart_que;
 
-QuestionPart *NewQuestionPart(F64 x, F64 y, CDC *sprite, I64 timerReset = 1, I8 type = 1)
+class Coin : CQue
+{
+  Collider *myCol;
+  CDC *curSprite;
+  Bool glowing;
+  I8 glowingTimer;
+} coin_que; 
+
+QuestionPart *NewQuestionPart(F64 x, F64 y, CDC *sprite, I64 timerReset = 1, I8 type = 1)
 {
   QuestionPart *new = CAlloc(sizeof(QuestionPart));
   new->pos.x = x;
@@ -324,13 +333,14 @@ U0 DelBrick(Brick *a)
   Free(a);
 }
 
-QuestionBlock *NewQuestion(F64 x, F64 y, I64 amount = 1)
+QuestionBlock *NewQuestion(F64 x, F64 y, I64 amount = 1, Bool hidden = FALSE)
 {
   QuestionBlock *new = CAlloc(sizeof(QuestionBlock));
   new->myCol = NewCollider(x, y, 24, 24, QUESTION_COLLIDER);
   new->isFalling = FALSE;
   new->offsetY = 0;
   new->amount = amount;
+  new->hidden = hidden;
   new->curSprite = tex_Question1;
   QueIns(new, question_que);
   return new;
@@ -375,6 +385,21 @@ Particle *NewParticle(F64 x, F64 y, CDC *sprite, F64 velX = 0, F64 velY = 0)
 
 U0 DelParticle(Particle *a)
 {
+  QueRem(a);
+  Free(a);
+}
+
+Coin *NewCoin(F64 x, F64 y)
+{
+  Coin *new = CAlloc(sizeof(Coin));
+  new->myCol = NewCollider(x,y,24,24,COIN_COLLIDER);
+  QueIns(new, coin_que.last);
+  return new;
+}
+
+U0 DelCoin(Coin *a)
+{
+  DelCollider(a->myCol);
   QueRem(a);
   Free(a);
 }
@@ -452,6 +477,9 @@ U0 InitMapEntities()
 	case 5: NewShroom(x*24,y*24); break;
 	case 6: NewBrick(x*24,y*24); break;
 	case 7: NewQuestion(x*24, y*24); break;
+	case 8: NewQuestion(x*24, y*24, 10, TRUE); break;
+
+	case 10: NewCoin(x*24, y*24); break;
       }
     }
   }
@@ -550,6 +578,7 @@ U0 Init()
   QueInit(&brick_que);
   QueInit(&question_que);
   QueInit(&questionpart_que);
+  QueInit(&coin_que);
 
   plr.headCol = NewCollider(0,-10, 12, 20, 1);
   plr.myCollider = NewCollider(0, 0, 12, 22, 1);

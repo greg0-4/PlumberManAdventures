@@ -198,6 +198,25 @@ U0 QuestionPlrCollision(Collider *a)
   }
 }
 
+U0 CoinPlrCollision(Collider *a)
+{
+  Coin *temp = coin_que.next;
+  while(temp != &coin_que)
+  {
+    Coin *next = temp->next;
+    if(temp->myCol != a)
+      goto cont;
+    if(AABBCollision(plr.myCollider, temp->myCol))
+    {
+      plr.coins++;
+      DelCoin(temp);
+      goto cont;
+    }
+    cont:
+    temp = next;
+  }
+}
+
 U0 UpdateCam()
 {
   if(plr.myCollider->pos.x > 320)
@@ -350,6 +369,9 @@ U0 UpdatePlrMove()
 	case SHROOM_COLLIDER:
 	  ShroomPlrCollision(temp);
 	break;
+        case COIN_COLLIDER:
+          CoinPlrCollision(temp);
+	break;
       }
     }
     colx_continue:
@@ -358,7 +380,7 @@ U0 UpdatePlrMove()
   plr.vel.y += plr.gravity;
 
   if(Abs(plr.vel.y) < 0.1)
-  {
+  {
     plr.vel.y = 0;
   }
 
@@ -1076,9 +1098,14 @@ U0 UpdateBreakables()
 
 
 U0 UpdateQuestion(QuestionBlock *a)
-{
+{  
   if(a->amount != 0)
   {
+    if(a->hidden)
+    {
+      a->curSprite = tex_Brick;
+      goto sprite_cont;
+    }
     a->glowTimer--;
     if(a->glowing)
     {
@@ -1095,6 +1122,7 @@ U0 UpdateQuestion(QuestionBlock *a)
     }
   }
 
+  sprite_cont:
   if(a->amount <= 0)
   {
     a->amount = 0;
@@ -1161,7 +1189,7 @@ U0 UpdateQuestionPart(QuestionPart *a)
 
     if(!a->isFalling)
     {
-      a->offsetY += 10;
+      a->offsetY += 10;
     }
     if(a->offsetY > 60)
     {
@@ -1178,6 +1206,38 @@ U0 UpdateQuestionParts()
   {
     QuestionPart *next = temp->next;
     UpdateQuestionPart(temp);
+    temp = next;
+  }
+}
+
+
+U0 UpdateCoin(Coin *a)
+{
+  a->glowingTimer--;
+
+  if(a->glowing)
+  {
+    a->curSprite = tex_Coin1;
+  }
+  else
+  {
+    a->curSprite = tex_Coin2;
+  }
+
+  if(a->glowingTimer <= 0)
+  {
+    a->glowingTimer = 5;
+    a->glowing = !a->glowing;
+  }
+}
+
+U0 UpdateCoins()
+{
+  Coin *temp = coin_que.next;
+  while(temp != &coin_que)
+  {
+    Coin *next = temp->next;
+    UpdateCoin(temp);
     temp = next;
   }
 }
