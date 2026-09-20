@@ -12,6 +12,8 @@
 #define ENDLEVEL_COLLIDER 12
 #define PLATFORM_COLLIDER 13
 #define BOUNCEOFF_COLLIDER 14
+#define SPINLASER_COLLIDER 15
+#define FIREBREATH_COLLIDER 16
 
 #define GRAVITY 1
 #define FRICTION 1.3
@@ -240,6 +242,23 @@ class SpinLaser : CQue
   F64 deg;
 } spinlaser_que;
 
+class TurtleBoss : Enemy
+{
+  I8 jumpTimer;
+  I16 fireTimer;
+  F64 walk_frameSpeed;
+  I64 curFrame;
+  Vector2 shootPos1;
+  Vector2 shootPos2;
+  Vector2 shootPos3;
+} turtleboss_que;
+
+class FireBreath : CQue
+{
+  Vector2 vel;
+  Collider *myCol;
+} firebreath_que;
+
 I8 g_currentLevel = 1;
 
 QuestionPart *NewQuestionPart(F64 x, F64 y, CDC *sprite, I64 timerReset = 1, I8 type = 1)
@@ -282,12 +301,29 @@ U0 DelCollider(Collider *a)
   Free(a);
 }
 
+FireBreath *NewFireBreath(F64 x, F64 y)
+{
+  FireBreath *new = CAlloc(sizeof(FireBreath));
+  new->myCol = NewCollider(x, y, 36, 12, FIREBREATH_COLLIDER);
+  new->vel.x = 0;
+  new->vel.y = 0;
+  QueIns(new, firebreath_que);
+  return new;
+}
+
+U0 DelFireBreath(FireBreath *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
 SpinLaser *NewSpinLaser(F64 x, F64 y)
 {
   SpinLaser *new = CAlloc(sizeof(SpinLaser));
   new->deg = 0;
   new->myCol = NewCollider(x, y, 24, 24, WALL_COLLIDER);
-  new->killCol = NewCollider(x, y - 100, 24, 24, WALL_COLLIDER);
+  new->killCol = NewCollider(x, y - 100, 24, 24, SPINLASER_COLLIDER);
   QueIns(new, spinlaser_que);
   return new;
 }
@@ -327,6 +363,35 @@ Slug *NewSlug(F64 x, F64 y)
 }
 
 U0 DelSlug(Slug *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
+TurtleBoss *NewTurtleBoss(F64 x, F64 y)
+{
+  TurtleBoss *new = CAlloc(sizeof(TurtleBoss));
+  new->myCol = NewCollider(x,y, 22, 42, ENEMY_COLLIDER);
+  new->Health = 10;
+  new->grounded = FALSE;
+  new->isLookingRight = FALSE;
+  new->active = TRUE;
+  new->vel.x = 0;
+  new->speed = 0.25;
+  new->vel.y = 0;
+  new->fireTimer = 0;
+  new->shootPos1.x = 0;
+  new->shootPos1.y = 0;
+  new->shootPos2.x = 0;
+  new->shootPos2.y = 0;
+  new->shootPos3.x = 0;
+  new->shootPos3.y = 0;
+  QueIns(new, turtleboss_que);
+  return new;
+}
+
+U0 DelTurtleBoss(TurtleBoss *a)
 {
   DelCollider(a->myCol);
   QueRem(a);
@@ -645,6 +710,9 @@ U0 InitMapEntities()
 	case 13: NewBounceOff(x*24, y *24); break;
 	case 14: NewPlatform(x*24, y*24, 2); break;
 	case 15: NewSpinLaser(x * 24, y * 24); break;
+	case 16:
+	  NewTurtleBoss(x * 24, (y * 24) - 20); 
+	break;
       }
     }
   }
@@ -792,6 +860,9 @@ U0 CleanUpQueues()
   QueDel(&endlevel_que);
   QueDel(&platform_que);
   QueDel(&bounceoff_que);
+  QueDel(&spinlaser_que);
+  QueDel(&turtleboss_que);
+  QueDel(&firebreath_que);
 }
 
 U0 LoadLevel()
@@ -803,8 +874,36 @@ U0 LoadLevel()
     case 1: LoadMap("Maps/City.TXT"); break;
     case 2: LoadMap("Maps/Sewers.TXT"); break;
     case 3: LoadMap("Maps/Rooftops.TXT"); break;
+    case 4: LoadMap("Maps/Boss.TXT"); break;
   }
 }
+
+g_currentLevel = 4;
+
+plr.grounded = FALSE;
+plr.isWalking = FALSE;
+plr.isJumping = FALSE;
+plr.isFalling = FALSE;
+plr.isLookingRight = TRUE;
+plr.isFinished = FALSE;
+plr.walkFrame = 0;
+plr.walk_frameSpeed = 0;
+plr.walk_frameSpeedReset = 0;
+plr.endlevel_Timer = 0;
+
+plr.ducking = FALSE;
+
+plr.immune = FALSE;
+plr.immuneFlash = FALSE;
+plr.immuneTimer = 0;
+plr.immuneCycles = 0;
+
+plr.pauseTimer = 0;
+
+plr.coins = 0;
+plr.score = 0;
+
+
 
 U0 Init(Bool keepData = FALSE)
 {
@@ -813,8 +912,7 @@ U0 Init(Bool keepData = FALSE)
   current_map.width = 20;
   current_map.height = MAP_HEIGHT; */
 //LoadMap("Maps/Test1.TXT");
-  g_currentLevel = 4;
-  CleanUpMap;
+//  CleanUpMap;
   LoadLevel;
   QueInit(&collider_que);
   QueInit(&particle_que);
@@ -832,7 +930,9 @@ U0 Init(Bool keepData = FALSE)
   QueInit(&platform_que);
   QueInit(&bounceoff_que);
   QueInit(&spinlaser_que);
-  
+  QueInit(&turtleboss_que);
+  QueInit(&firebreath_que);
+
   plr.headCol = NewCollider(0,-10, 12, 20, 1);
   plr.myCollider = NewCollider(0, 0, 12, 22, 1);
   plr.footCol = NewCollider(2, 22, 10, 6, 1); 
@@ -868,6 +968,7 @@ U0 Init(Bool keepData = FALSE)
   keys.left = FALSE;
   keys.right = FALSE;
   keys.space = FALSE;
+  keys.shift = FALSE;
   
   InitMapEntities;
 }
@@ -875,6 +976,13 @@ U0 Init(Bool keepData = FALSE)
 U0 UnitsSec(F64 val)
 {
   return val * 30.0;
+}
+
+U64 RandomU64Range(U64 min, U64 max)
+{
+  if(max <= min) return min;
+  U64 result = min + RandU64() % (max - min + 1);
+  return result;
 }
 
 U0 PlayerDie()

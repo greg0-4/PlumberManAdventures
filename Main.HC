@@ -48,12 +48,14 @@ U0 DrawIt(CTask *task, CDC *dc)
     UpdateParticles;
     UpdateEndLevels;
     UpdateSpinLasers;
+    UpdateTurtleBosses;
+    UpdateFireBreaths;
   }
 
   UpdateMousePos;
 
 
-  // DrawColliders(dc);
+  DrawColliders(dc);
   DrawMap(dc);
   DrawQuestionParts(dc);
   DrawBricks(dc);
@@ -72,6 +74,7 @@ U0 DrawIt(CTask *task, CDC *dc)
   DrawFireballs(dc);
   DrawPlatforms(dc);
   DrawSpinLasers(dc);
+  DrawTurtleBosses(dc);
 
   DrawEndFadeIn(dc);
   dc->color = WHITE;

@@ -6,6 +6,21 @@ U0 UpdateDeltaTime()
   dtScale = dT * 30.0;
 }
 
+U0 SpinLaserPlrCollision(Collider *a)
+{
+  SpinLaser *temp = spinlaser_que.next;
+  while(temp != &spinlaser_que)
+  {
+    SpinLaser *next = temp->next;
+    if(temp->killCol != a)
+      goto cont;
+    if(AABBCollision(plr.myCollider, a))
+      PlayerDie;
+    cont:
+    temp = next;
+  }
+}
+
 U0 SlugPlrCollision(Collider *a)
 {
   Slug *temp = slug_que.next;
@@ -587,6 +602,9 @@ U0 UpdatePlrMove()
 	case ENDLEVEL_COLLIDER:
 	  EndLevelPlrCollision(temp);
 	break;
+	case SPINLASER_COLLIDER:
+	  SpinLaserPlrCollision(temp);
+	break;
       }
     }
     colx_continue:
@@ -967,7 +985,10 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
       goto enemy_continue;
     }
 
-
+    if(temp->type == FIREBREATH_COLLIDER)
+    {
+      goto enemy_continue;
+    }
 
     if(a->myCol->type == ENEMY_COLLIDER && temp->type == ENEMY_COLLIDER)
     {
@@ -1106,15 +1127,16 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
       {
  	if(a->vel.y < 0)
 	{
-	  a->myCol->pos.y = temp->pos.y - a->myCol->size.y;
+     	  a->myCol->pos.y = temp->pos.y + temp->size.y;
+          a->grounded = FALSE;
 	}
-	 else
+	else
 	{
 	  a->myCol->pos.y = temp->pos.y - a->myCol->size.y;
+	  a->grounded = TRUE;
 	}
 	a->vel.y = 0;
       }
-
     }
     enemy_continue:
     temp = next;
@@ -1123,7 +1145,7 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
 
 
 
-U0 UpdateEnemy(Enemy *a)
+U0 UpdateEnemy(Enemy *a, F64 gravity = GRAVITY)
 { 
   if(!a->active)
   {
@@ -1136,6 +1158,22 @@ U0 UpdateEnemy(Enemy *a)
       return;
     }
   }
+
+  if(a->myCol->type == TSHELL_COLLIDER)
+  {
+    if(a->myCol->pos.x - camOffset.x <= -24)
+    {
+      DelTShell(a);
+      return;
+    }
+
+    if(a->myCol->pos.x - camOffset.x > 680)
+    {
+      DelTShell(a);
+      return;
+    }
+  }
+
   if(a->isLookingRight)
   {
     a->vel.x = a->speed;
@@ -1146,7 +1184,7 @@ U0 UpdateEnemy(Enemy *a)
   }
   a->myCol->pos.x += a->vel.x *dtScale;
   EnemyCollisions(a);
-  a->vel.y += GRAVITY *dtScale; 
+  a->vel.y += gravity *dtScale; 
   a->myCol->pos.y += a->vel.y * dtScale;
   EnemyCollisions(a, TRUE);
 }
@@ -1865,7 +1903,7 @@ U0 UpdatePlatforms()
 
 U0 UpdateSpinLaser(SpinLaser *a)
 {
-  a->deg += 3 * dtScale;
+  a->deg += 3 * dtScale;
   a->deg = FixDeg(a->deg);
 
   a->killCol->pos.x = a->myCol->pos.x + 100 * Cos(Deg2Rad(a->deg));
@@ -1885,7 +1923,123 @@ U0 UpdateSpinLasers()
 }
 
 
+CDC GetTurtleBossSprite(TurtleBoss *a)
+{
+  switch(a->curFrame)
+  {
+    default:
+      return tex_Boss_WalkLeft1;
+    break;
+    case 1: return tex_Boss_WalkLeft1; break;
+    case 2: return tex_Boss_WalkLeft2; break;
+  }
+}
 
+
+U0 UpdateTurtleBossAnimation(TurtleBoss *a)
+{
+  a->walk_frameSpeed -= 1 * dtScale;
+  a->curSprite = GetTurtleBossSprite(a);
+  if(a->curFrame > 2)
+  {
+    a->curFrame = 1;
+  }
+  if(a->walk_frameSpeed <= 0)
+  {
+    a->walk_frameSpeed = 5;
+    a->curFrame++;
+  } 
+}
+
+U0 UpdateFireBreath(FireBreath *a)
+{
+  a->vel.x = -4;
+
+  a->myCol->pos.x += a->vel.x * dtScale; 
+}
+
+U0 UpdateFireBreaths()
+{
+  FireBreath *temp = firebreath_que.next;
+  while(temp != &firebreath_que)
+  {
+    FireBreath *next = temp->next;
+    UpdateFireBreath(temp);
+    temp = next;
+  }
+}
+
+U0 UpdateTurtleBoss(TurtleBoss *a)
+{
+ 
+  a->jumpTimer -= 1 * dtScale;
+  if(a->jumpTimer <= 0)
+  {
+    a->jumpTimer = 60;
+    a->speed = -a->speed;
+    if((RandU16 % 2) == 1)
+    {
+      if(a->grounded == TRUE)
+      {
+        a->vel.y = -1.6;
+        a->grounded = FALSE;
+      }
+    } 
+  }
+
+  a->shootPos1.x = a->myCol->pos.x - 8;
+  a->shootPos1.y = a->myCol->pos.y - 5;
+
+  a->shootPos2.x = a->myCol->pos.x - 8;
+  a->shootPos2.y = a->myCol->pos.y + 16;
+
+  a->shootPos3.x = a->myCol->pos.x - 8;
+  a->shootPos3.y = a->myCol->pos.y + 30;
+
+  a->fireTimer -= 1 * dtScale;
+  if(a->fireTimer <= 0)
+  {
+    a->fireTimer = 45;
+    if((RandU16 % 2) == 1)
+    {
+      // tricky stuff xd    
+      U64 shootSlot = RandomU64Range(0, 2);
+
+      switch(shootSlot)
+      {
+        case 0:
+	  NewFireBreath(a->shootPos1.x, a->shootPos1.y);
+	break;
+	case 1:
+	  NewFireBreath(a->shootPos2.x, a->shootPos2.y);
+	break;
+	case 2:
+	  NewFireBreath(a->shootPos3.x, a->shootPos3.y);
+	break;
+      }
+
+    }
+  }
+
+
+  UpdateEnemy(a, 0.1);
+  UpdateTurtleBossAnimation(a);
+  a->myCol->pos.x += a->vel.x;
+  EnemyCollisions(a);
+  a->myCol->pos.y += a->vel.y;
+  EnemyCollisions(a, TRUE);
+}
+
+U0 UpdateTurtleBosses()
+{
+  TurtleBoss *temp = turtleboss_que.next;
+  while(temp != &turtleboss_que)
+  {
+    TurtleBoss *next = temp->next;
+    UpdateTurtleBoss(temp);
+    temp = next;
+  }
+}
 
 
 

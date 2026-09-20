@@ -32,7 +32,7 @@ dc->color=ROPF_DITHER+GREEN<<16+TRANSPARENT;
   dc->color = BLACK;
 }
 
-
+
 U0 DrawMap(CDC *dc)
 {
   dc->color = BLACK;
@@ -102,6 +102,7 @@ U0 DrawMap(CDC *dc)
 	case 41: GrBlot(dc, posX, posY, tex_MansionTemple_StatueBL); break;
 	case 42: GrBlot(dc, posX, posY, tex_MansionTemple_StatueBR); break;
 	case 43: GrBlot(dc, posX, posY, tex_Tile_Platform); break;
+	case 44: GrBlot(dc, posX, posY, tex_Tile_BossFloor); break; 
       }
     }
   }
@@ -482,7 +483,52 @@ U0 DrawSpinLasers(CDC *dc)
     temp->killCol->pos.x - camOffset.x,
     temp->killCol->pos.y - camOffset.y,
     tex_SpinLaser_Ball);
+    
+  
     temp = next;
   }
 
+}
+
+U0 DrawTurtleBosses(CDC *dc)
+{
+  TurtleBoss *temp = turtleboss_que.next;
+  while(temp != &turtleboss_que)
+  {
+    TurtleBoss *next = temp->next;
+    dc->color = WHITE;
+    if(temp->curSprite == NULL)
+    {
+      goto cont;
+    }
+    if(Blink)
+    {
+      GrBlot(dc,
+      temp->myCol->pos.x - 5 - camOffset.x,
+      temp->myCol->pos.y - 5 - camOffset.y,
+      tex_Boss_Forcefield1);
+    }
+    else
+    {
+      GrBlot(dc,
+      temp->myCol->pos.x - 5 - camOffset.x,
+      temp->myCol->pos.y - 5 - camOffset.y,
+      tex_Boss_Forcefield2);
+    }
+
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.y - camOffset.y,
+    temp->curSprite);
+    dc->color = YELLOW;
+
+    GrPlot(dc, temp->shootPos1.x - camOffset.x, temp->shootPos1.y - camOffset.y);
+    GrPlot(dc, temp->shootPos2.x - camOffset.x, temp->shootPos2.y - camOffset.y);
+    GrPlot(dc, temp->shootPos3.x - camOffset.x, temp->shootPos3.y - camOffset.y);
+
+ 
+    cont:
+    GrPrint(dc, temp->myCol->pos.x - camOffset.x, temp->myCol->pos.y - camOffset.y, "[%d]",temp->grounded);
+    temp = next;
+  }
 }

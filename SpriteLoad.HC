@@ -1,3 +1,4 @@
+
 CDC *tex_Tile = GRRead("Sprites/Tile.GR.Z");
 CDC *tex_Brick = GRRead("Sprites/Brick.GR.Z");
 CDC *tex_Coin1 = GRRead("Sprites/Coin/Coin1.GR.Z");
@@ -157,4 +158,12 @@ CDC *tex_MansionTemple_StatueTL = GRRead("Sprites/Tiles/Mansion/TempleStatueTL.G
 CDC *tex_MansionTemple_StatueTR = GRRead("Sprites/Tiles/Mansion/TempleStatueTR.GR.Z");
 
 
-CDC *tex_SpinLaser_Ball = GRRead("Sprites/SpinLaser/Ball.GR.Z");
+CDC *tex_SpinLaser_Ball = GRRead("Sprites/SpinLaser/Ball.GR.Z");
+
+CDC *tex_Tile_BossFloor = GRRead("Sprites/Tiles/Boss/Floor.GR.Z");
+
+CDC *tex_Boss_WalkLeft1 = GRRead("Sprites/Boss/WalkLeft1.GR.Z");
+CDC *tex_Boss_WalkLeft2 = GRRead("Sprites/Boss/WalkLeft2.GR.Z");
+
+CDC *tex_Boss_Forcefield1 = GRRead("Sprites/Boss/Forcefield1.GR");
+CDC *tex_Boss_Forcefield2 = GRRead("Sprites/Boss/Forcefield2.GR");
