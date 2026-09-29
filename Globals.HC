@@ -13,7 +13,9 @@
 #define PLATFORM_COLLIDER 13
 #define BOUNCEOFF_COLLIDER 14
 #define SPINLASER_COLLIDER 15
-#define FIREBREATH_COLLIDER 16
+#define BOSS_COLLIDER 16
+#define FIREBREATH_COLLIDER 17
+#define LAVA_COLLIDER 18
 
 #define GRAVITY 1
 #define FRICTION 1.3
@@ -240,14 +242,18 @@ class SpinLaser : CQue
   Collider *myCol;
   Collider *killCol;
   F64 deg;
+  Bool isLeft;
 } spinlaser_que;
 
 class TurtleBoss : Enemy
 {
   I8 jumpTimer;
+  I8 hitTimes;
   I16 fireTimer;
   F64 walk_frameSpeed;
   I64 curFrame;
+  Bool stunned;
+  F64 stunnedTimer;
   Vector2 shootPos1;
   Vector2 shootPos2;
   Vector2 shootPos3;
@@ -258,6 +264,11 @@ class FireBreath : CQue
   Vector2 vel;
   Collider *myCol;
 } firebreath_que;
+
+class Lava : CQue
+{
+  Collider *myCol;
+} lava_que;
 
 I8 g_currentLevel = 1;
 
@@ -301,10 +312,25 @@ U0 DelCollider(Collider *a)
   Free(a);
 }
 
+Lava *NewLava(F64 x, F64 y)
+{
+  Lava *new = CAlloc(sizeof(Lava));
+  new->myCol = NewCollider(x, y, 24, 24, LAVA_COLLIDER);
+  QueIns(new, lava_que);
+  return new;
+}
+
+U0 DelLava(Lava *a)
+{
+  DelCollider(a->myCol);
+  QueRem(a);
+  Free(a);
+}
+
 FireBreath *NewFireBreath(F64 x, F64 y)
 {
   FireBreath *new = CAlloc(sizeof(FireBreath));
-  new->myCol = NewCollider(x, y, 36, 12, FIREBREATH_COLLIDER);
+  new->myCol = NewCollider(x, y, 36, 12, FIREBREATH_COLLIDER);
   new->vel.x = 0;
   new->vel.y = 0;
   QueIns(new, firebreath_que);
@@ -318,12 +344,24 @@ U0 DelFireBreath(FireBreath *a)
   Free(a);
 }
 
-SpinLaser *NewSpinLaser(F64 x, F64 y)
+U0 DelAllFireBreaths()
+{
+  FireBreath *temp = firebreath_que.next;
+  while(temp != &firebreath_que)
+  {
+    FireBreath *next = temp->next;
+    DelFireBreath(temp);
+    temp = next;
+  }
+}
+
+SpinLaser *NewSpinLaser(F64 x, F64 y, Bool isLeft = FALSE)
 {
   SpinLaser *new = CAlloc(sizeof(SpinLaser));
   new->deg = 0;
   new->myCol = NewCollider(x, y, 24, 24, WALL_COLLIDER);
   new->killCol = NewCollider(x, y - 100, 24, 24, SPINLASER_COLLIDER);
+  new->isLeft = isLeft;
   QueIns(new, spinlaser_que);
   return new;
 }
@@ -372,15 +410,18 @@ U0 DelSlug(Slug *a)
 TurtleBoss *NewTurtleBoss(F64 x, F64 y)
 {
   TurtleBoss *new = CAlloc(sizeof(TurtleBoss));
-  new->myCol = NewCollider(x,y, 22, 42, ENEMY_COLLIDER);
-  new->Health = 10;
+  new->myCol = NewCollider(x,y, 22, 42, BOSS_COLLIDER);
+  new->Health = 20;
   new->grounded = FALSE;
   new->isLookingRight = FALSE;
-  new->active = TRUE;
+  new->active = FALSE;
+  new->stunned = FALSE;
   new->vel.x = 0;
   new->speed = 0.25;
   new->vel.y = 0;
+  new->hitTimes = 0;
   new->fireTimer = 0;
+  new->stunnedTimer = 3 * 30;
   new->shootPos1.x = 0;
   new->shootPos1.y = 0;
   new->shootPos2.x = 0;
@@ -711,7 +752,13 @@ U0 InitMapEntities()
 	case 14: NewPlatform(x*24, y*24, 2); break;
 	case 15: NewSpinLaser(x * 24, y * 24); break;
 	case 16:
-	  NewTurtleBoss(x * 24, (y * 24) - 20); 
+	   NewSpinLaser(x * 24, y * 24, TRUE);
+	break;
+	case 17:
+	  NewTurtleBoss(x * 24, (y * 24) - 20);
+	break;
+	case 18:
+	  NewLava(x * 24, y * 24);
 	break;
       }
     }
@@ -723,15 +770,7 @@ I64 g_MouseY = ms.pos.y;
 
 F64 FixDeg(I64 deg)
 {
-  if(deg > 359)
-  {
-    deg -= 360;
-  }
-  if(deg < 0)
-  {
-    deg += 360;
-  }
-  return deg;
+  return deg % 360;
 }
 
 F64 Deg2Rad(I64 deg)
@@ -863,6 +902,7 @@ U0 CleanUpQueues()
   QueDel(&spinlaser_que);
   QueDel(&turtleboss_que);
   QueDel(&firebreath_que);
+  QueDel(&lava_que);
 }
 
 U0 LoadLevel()
@@ -932,6 +972,7 @@ U0 Init(Bool keepData = FALSE)
   QueInit(&spinlaser_que);
   QueInit(&turtleboss_que);
   QueInit(&firebreath_que);
+  QueInit(&lava_que);
 
   plr.headCol = NewCollider(0,-10, 12, 20, 1);
   plr.myCollider = NewCollider(0, 0, 12, 22, 1);
@@ -951,7 +992,7 @@ U0 Init(Bool keepData = FALSE)
   plr.immune = FALSE;
   if(!keepData)
   {
-    plr.powerUp = 0;
+    plr.powerUp = 2;
   }
   plr.isFinished = FALSE;
   plr.endlevel_Timer = 0;
@@ -985,11 +1026,15 @@ U64 RandomU64Range(U64 min, U64 max)
   return result;
 }
 
-U0 PlayerDie()
+U0 PlayerDie(Bool instant = FALSE)
 {
   if(plr.isFinished)
   {
     return;
+  }
+  if(instant)
+  {
+    goto cont;
   }
   if(plr.myCollider->pos.y > 500)
   {

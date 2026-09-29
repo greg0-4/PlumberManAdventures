@@ -166,4 +166,10 @@ CDC *tex_Boss_WalkLeft1 = GRRead("Sprites/Boss/WalkLeft1.GR.Z");
 CDC *tex_Boss_WalkLeft2 = GRRead("Sprites/Boss/WalkLeft2.GR.Z");
 
 CDC *tex_Boss_Forcefield1 = GRRead("Sprites/Boss/Forcefield1.GR");
-CDC *tex_Boss_Forcefield2 = GRRead("Sprites/Boss/Forcefield2.GR");
+CDC *tex_Boss_Forcefield2 = GRRead("Sprites/Boss/Forcefield2.GR");
+
+CDC *tex_FireBreath1 = GRRead("Sprites/Boss/FireBreath1.GR");
+CDC *tex_FireBreath2 = GRRead("Sprites/Boss/FireBreath2.GR");
+
+CDC *tex_Tile_Lava1 = GRRead("Sprites/Lava/Lava1.GR");
+CDC *tex_Tile_Lava2 = GRRead("Sprites/Lava/Lava2.GR");

@@ -501,6 +501,8 @@ U0 DrawTurtleBosses(CDC *dc)
     {
       goto cont;
     }
+    if(temp->Health > 10)
+    {
     if(Blink)
     {
       GrBlot(dc,
@@ -516,19 +518,91 @@ U0 DrawTurtleBosses(CDC *dc)
       tex_Boss_Forcefield2);
     }
 
-    GrBlot(dc,
-    temp->myCol->pos.x - camOffset.x,
-    temp->myCol->pos.y - camOffset.y,
-    temp->curSprite);
-    dc->color = YELLOW;
+    }
 
+    if(temp->stunned)
+    {
+      if(Blink)
+      {
+        GrBlot(dc,
+        temp->myCol->pos.x - camOffset.x,
+        temp->myCol->pos.y - camOffset.y,
+        temp->curSprite);
+      }
+    }
+    else
+    {
+      GrBlot(dc,
+      temp->myCol->pos.x - camOffset.x,
+      temp->myCol->pos.y - camOffset.y,
+      temp->curSprite);
+    }
+
+
+    // Debug
+  /*
+    dc->color = YELLOW;
     GrPlot(dc, temp->shootPos1.x - camOffset.x, temp->shootPos1.y - camOffset.y);
     GrPlot(dc, temp->shootPos2.x - camOffset.x, temp->shootPos2.y - camOffset.y);
-    GrPlot(dc, temp->shootPos3.x - camOffset.x, temp->shootPos3.y - camOffset.y);
+    GrPlot(dc, temp->shootPos3.x - camOffset.x, temp->shootPos3.y - camOffset.y);
+    GrPrint(dc, temp->myCol->pos.x - camOffset.x, temp->myCol->pos.y - camOffset.y, "[%d]",temp->Health);
+*/
 
  
     cont:
-    GrPrint(dc, temp->myCol->pos.x - camOffset.x, temp->myCol->pos.y - camOffset.y, "[%d]",temp->grounded);
+    temp = next;
+  }
+}
+
+U0 DrawFireBreaths(CDC *dc)
+{
+  FireBreath *temp = firebreath_que.next;
+  while(temp != &firebreath_que)
+  {
+    FireBreath *next = temp->next;
+
+    CDC *sprite = NULL;
+
+    if(Blink(3.5))
+    {
+      sprite = tex_FireBreath1;
+    }
+    else
+    {
+      sprite = tex_FireBreath2;
+    }
+
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.y - camOffset.y,
+    sprite); 
+    
+    temp = next;
+  } 
+}
+
+
+U0 DrawLava(CDC *dc)
+{
+  Lava *temp = lava_que.next;
+  while(temp != &lava_que)
+  {
+    Lava *next = temp->next;
+    CDC *sprite = NULL;
+    if(Blink)
+    {
+      sprite = tex_Tile_Lava1;
+    }
+    else
+    {
+      sprite = tex_Tile_Lava2;
+    }
+
+
+    GrBlot(dc,
+    temp->myCol->pos.x - camOffset.x,
+    temp->myCol->pos.y - camOffset.y,
+    sprite);
     temp = next;
   }
 }

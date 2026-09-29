@@ -65,6 +65,53 @@ U0 SlugPlrCollision(Collider *a)
   }
 }
 
+
+U0 BossPlrCollision(Collider *a)
+{
+  TurtleBoss *temp = turtleboss_que.next;
+  while(temp != &turtleboss_que)
+  {
+    TurtleBoss *next = temp->next;
+    if(plr.myCollider == a)
+    {
+      goto col_cont;
+    }
+    if(plr.footCol == a)
+    {
+      goto col_cont;
+    }
+    if(temp->myCol != a)
+    {
+      goto col_cont;
+    }
+
+    if(AABBCollision(plr.footCol, temp->myCol))
+    {
+      if(plr.vel.y > 0 && !temp->stunned)
+      {
+        plr.vel.y = -12;
+	if(temp->Health >= 10)
+        {
+	  temp->Health -= 2;
+        }
+	temp->stunned = TRUE;
+        return; 
+      }
+    }
+
+    if(AABBCollision(plr.myCollider, temp->myCol))
+    {
+      if(!temp->stunned)
+      {
+        PlayerDie;
+      }
+    }
+    col_cont:
+    temp = next;
+  }
+}
+
+
 U0 TurtlePlrCollision(Collider *a)
 {
   Turtle *temp = turtle_que.next;
@@ -311,6 +358,14 @@ U0 UpdateCam()
   camOffset.y = 0;
 }
 
+U0 LavaPlrCollision(Collider *a)
+{
+  if(AABBCollision(a, plr.myCollider))
+  {
+    PlayerDie(TRUE);
+  }
+}
+
 U0 EndLevelPlrCollision(Collider *a)
 {
   EndLevel *temp = endlevel_que.next;
@@ -405,6 +460,7 @@ U0 PlrPlatformCollision(Collider *col, Bool xAxis = FALSE)
     temp = next;
   }
 }
+
 
 
 // Player Movement and PlrCollisions
@@ -604,6 +660,12 @@ U0 UpdatePlrMove()
 	break;
 	case SPINLASER_COLLIDER:
 	  SpinLaserPlrCollision(temp);
+	break;
+	case BOSS_COLLIDER:
+	  BossPlrCollision(temp);
+	break;
+	case LAVA_COLLIDER:
+	  LavaPlrCollision(temp);
 	break;
       }
     }
@@ -963,6 +1025,36 @@ Bool CheckBulletCollision(Bullet *bullet)
   return FALSE;
 }
 
+U0 DamageBossFire(Collider *col, Collider *fireCol)
+{
+  // Look for entity
+
+  TurtleBoss *temp = turtleboss_que.next;
+
+  while(temp->myCol != col)
+  {
+    TurtleBoss *next = temp->next;
+    temp = next;
+  }
+
+  // Look for fireball
+
+  Fireball *ftemp = fireball_que.next;
+
+  while(ftemp->myCol != fireCol)
+  {
+    Fireball *fnext = ftemp->next;
+    ftemp = fnext;
+  }
+
+  if(AABBCollision(fireCol, col) && !temp->stunned)
+  {
+    DelFireball(ftemp);
+    temp->hitTimes++;  
+  }
+}
+
+
 // Enemy logic
 U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
 {
@@ -985,7 +1077,20 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
       goto enemy_continue;
     }
 
+    if(a->myCol->type == BOSS_COLLIDER && temp->type == FIREBALL_COLLIDER)
+    {
+      DamageBossFire(a->myCol, temp);
+      goto enemy_continue;
+    }
+ 
+
+
     if(temp->type == FIREBREATH_COLLIDER)
+    {
+      goto enemy_continue;
+    }
+
+    if(temp->type == SPINLASER_COLLIDER)
     {
       goto enemy_continue;
     }
@@ -1009,11 +1114,14 @@ U0 EnemyCollisions(Enemy *a, Bool yAxis = FALSE)
     {
       goto enemy_shell_cont;
     }
- 
+
+
     if(temp->type == COIN_COLLIDER)
     {
       goto enemy_continue;
-    } 
+    }
+
+ 
     enemy_shell_cont:
 
     if(AABBCollision(a->myCol, temp))
@@ -1149,7 +1257,7 @@ U0 UpdateEnemy(Enemy *a, F64 gravity = GRAVITY)
 { 
   if(!a->active)
   {
-    if(a->myCol->pos.x - camOffset.x < 640)
+    if(Abs(a->myCol->pos.x - camOffset.x) < 640)
     {
       a->active = TRUE;
     }
@@ -1903,7 +2011,14 @@ U0 UpdatePlatforms()
 
 U0 UpdateSpinLaser(SpinLaser *a)
 {
-  a->deg += 3 * dtScale;
+  if(a->isLeft)
+  {
+    a->deg -= 3 * dtScale;
+  }
+  else
+  {
+    a->deg += 3 * dtScale;
+  }
   a->deg = FixDeg(a->deg);
 
   a->killCol->pos.x = a->myCol->pos.x + 100 * Cos(Deg2Rad(a->deg));
@@ -1997,9 +2112,9 @@ U0 UpdateTurtleBoss(TurtleBoss *a)
   a->shootPos3.y = a->myCol->pos.y + 30;
 
   a->fireTimer -= 1 * dtScale;
-  if(a->fireTimer <= 0)
+  if(a->fireTimer <= 0 && !a->stunned && a->active)
   {
-    a->fireTimer = 45;
+    a->fireTimer = 45;
     if((RandU16 % 2) == 1)
     {
       // tricky stuff xd    
@@ -2021,6 +2136,32 @@ U0 UpdateTurtleBoss(TurtleBoss *a)
     }
   }
 
+  if(a->hitTimes >= 4)
+  {
+    a->stunned = TRUE;
+    if(a->Health <= 10)
+    {
+      a->Health -= 5;
+    }
+    else
+    {
+      a->Health -= 2;
+    }
+    a->hitTimes = 0;
+  }
+
+  // Stunned timer
+  if(a->stunned)
+  {
+    a->stunnedTimer -= 1 * dtScale;
+
+    if(a->stunnedTimer <= 0)
+    {
+      a->stunned = FALSE;
+      a->stunnedTimer = 3 * 30;
+    }
+  }
+
 
   UpdateEnemy(a, 0.1);
   UpdateTurtleBossAnimation(a);
@@ -2028,6 +2169,13 @@ U0 UpdateTurtleBoss(TurtleBoss *a)
   EnemyCollisions(a);
   a->myCol->pos.y += a->vel.y;
   EnemyCollisions(a, TRUE);
+
+  if(a->Health <= 0)
+  {
+    DelTurtleBoss(a);
+    DelAllFireBreaths;
+    plr.isFinished = TRUE;
+  }
 }
 
 U0 UpdateTurtleBosses()
